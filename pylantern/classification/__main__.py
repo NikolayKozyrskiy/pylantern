@@ -13,6 +13,7 @@ import typer
 from ..config import load_config
 from ..common.utils import DevMode
 from .config import ClassificationConfig
+from .train_fns import train_fn, infer_fn
 
 
 app = typer.Typer()

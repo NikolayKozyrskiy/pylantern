@@ -1,13 +1,6 @@
 from enum import Enum
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, TypeVar, Tuple
 
 from pydantic import Field
 from torch import nn
@@ -32,6 +25,7 @@ class ClassificationDatasetName(str, Enum):
 class ClassificationConfig(Config):
     num_classes: int
     dataset_name: ClassificationDatasetName = ClassificationDatasetName.CIFAR10
+    image_hw: Optional[Tuple[int, int]] = None
 
     def model(self) -> nn.Module:
         model = models.mobilenet_v2(pretrained=True, progress=True)

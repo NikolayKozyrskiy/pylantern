@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 import warnings
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -18,11 +19,11 @@ from matches.loop.loader_scheduling import DataloaderSchedulerWrapper
 from matches.shortcuts.optimizer import SchedulerScopeType
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
-from ..common.utils import enumerate_normalized, log_optimizer_lrs
+from ..common.utils import enumerate_normalized, log_optimizer_lrs, consume_metric
 from ..output_dispatcher import filter_and_uncollate
 
 from .config import ClassificationConfig
-from .data import get_train_loader, get_validation_loader
+from .data.dataloader import get_train_loader, get_validation_loader
 from .pipeline import ClassificationPipeline, pipeline_from_config
 from .output_dispatcher import OutputDispatcherClr
 
@@ -30,7 +31,7 @@ from .output_dispatcher import OutputDispatcherClr
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
 
 
-def train_fn(loop: Loop, config: ClassificationConfig):
+def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     seed_everything(42)
     setup_cudnn_reproducibility(False, True)
 
@@ -39,36 +40,30 @@ def train_fn(loop: Loop, config: ClassificationConfig):
     train_loader = loop._loader_override(get_train_loader(config), "train")
     valid_loader = loop._loader_override(get_validation_loader(config), "valid")
 
-    pipeline = pipeline_from_config(config, device)
+    pipeline: ClassificationPipeline = pipeline_from_config(config, device)
 
-    optimizer = config.optimizer(pipeline.ae)
+    optimizer = config.optimizer(pipeline.model)
 
     out_dispatcher = OutputDispatcherClr(
         loss_aggregation_weigths=config.loss_aggregation_weigths, metrics=config.metrics
     )
 
-    loop.attach(ae_model=pipeline.ae, ae_optimizer=optimizer)
-    config.resume(loop)
+    loop.attach(model=pipeline.model, optimizer=optimizer)
+    config.resume(loop, pipeline)
     config.postprocess(loop, pipeline)
     scheduler = config.scheduler(optimizer)
 
     losses_d = defaultdict(lambda: Average(device=device))
     metrics_d = defaultdict(lambda: Average(device=device))
 
-    # if scheduler is not None:
-    #     loop.attach(ae_scheduler=scheduler)
+    if scheduler is not None:
+        loop.attach(scheduler=scheduler)
 
-    def stage_1(loop: Loop):
+    def _train(loop: Loop):
         def handle_batch(batch):
             with pipeline.batch_scope(batch):
-                losses = out_dispatcher.compute_losses(pipeline)
-                metrics = out_dispatcher.compute_metrics(pipeline)
-
-            for name, v in losses.computed_values.items():
-                losses_d[name].update(v.detach().mean())
-            for name, v in metrics.computed_values.items():
-                metrics_d[name].update(v.detach().mean())
-
+                losses, losses_d = out_dispatcher.compute_losses(pipeline, losses_d)
+                metrics, metrics_d = out_dispatcher.compute_metrics(pipeline, metrics_d)
             return losses.aggregated
 
         # torch.autograd.set_detect_anomaly(True)
@@ -78,12 +73,11 @@ def train_fn(loop: Loop, config: ClassificationConfig):
             for epoch_fraction, batch in enumerate_normalized(
                 loop.iterate_dataloader(train_loader, "train"), len(train_loader)
             ):
+                cur_iter = int(np.round((epoch + epoch_fraction) * len(train_loader)))
                 if train_eval_batch is None:
                     train_eval_batch = convert_tensor(
                         batch, device="cpu", non_blocking=True
                     )
-
-                cur_iter = int((epoch + epoch_fraction) * len(train_loader))
                 loss = handle_batch(batch)
                 loop.backward(loss)
                 loop.optimizer_step(optimizer, zero_grad="set_to_none")
@@ -91,23 +85,21 @@ def train_fn(loop: Loop, config: ClassificationConfig):
                     scheduler.step(SchedulerScopeType.BATCH, cur_iter)
                 log_optimizer_lrs(loop, optimizer)
 
-                if epoch_fraction == 0.0:
-                    # noinspection PyTypeChecker
-                    with loop.mode("valid"), pipeline.batch_scope(
-                        convert_tensor(
-                            train_eval_batch, device=device, non_blocking=True
-                        )
-                    ):
-                        log_images_to_tb_batch(loop, pipeline, "train")
-                        log_embeddings_to_tb_batch(loop, pipeline, "train")
+                # if epoch_fraction == 0.0:
+                #     # noinspection PyTypeChecker
+                #     with loop.mode("valid"), pipeline.batch_scope(
+                #         convert_tensor(
+                #             train_eval_batch, device=device, non_blocking=True
+                #         )
+                #     ):
+                #         log_images_to_tb_batch(loop, pipeline, "train")
+                #         log_embeddings_to_tb_batch(loop, pipeline, "train")
 
             if scheduler is not None:
                 scheduler.step(SchedulerScopeType.EPOCH, epoch)
 
-            for name, value in losses_d.items():
-                loop.metrics.consume(f"train/{name}", value)
-            for name, value in metrics_d.items():
-                loop.metrics.consume(f"train/{name}", value)
+            consume_metric(loop, losses_d, prefix="train")
+            consume_metric(loop, metrics_d, prefix="train")
 
             # Valid part
             for i, batch in enumerate(loop.iterate_dataloader(valid_loader)):
@@ -116,14 +108,12 @@ def train_fn(loop: Loop, config: ClassificationConfig):
                     with pipeline.batch_scope(batch):
                         for fn in config.log_vis_fns:
                             fn(loop, pipeline, "valid")
-            for name, value in losses_d.items():
-                loop.metrics.consume(f"valid/{name}", value)
-            for name, value in metrics_d.items():
-                loop.metrics.consume(f"valid/{name}", value)
+            consume_metric(loop, losses_d, prefix="valid")
+            consume_metric(loop, metrics_d, prefix="valid")
 
         predict_dataloader(loop, pipeline, valid_loader, out_dispatcher)
 
-    loop.run(stage_1)
+    loop.run(_train)
 
 
 def infer_fn(
@@ -132,28 +122,28 @@ def infer_fn(
     checkpoint: str = "best",
     data_root: Optional[Path] = None,
     output_name: Optional[str] = None,
-):
+) -> None:
     device = f"cuda:{torch.cuda.current_device()}"
 
     data_root = config.data_root if data_root is None else data_root
     output_name = checkpoint if output_name is None else output_name
 
     loader = get_validation_loader(config)
-    pipeline = pipeline_from_config(config, device)
+    pipeline: ClassificationPipeline = pipeline_from_config(config, device)
 
     out_dispatcher = OutputDispatcherClr(
         loss_aggregation_weigths=config.loss_aggregation_weigths, metrics=config.metrics
     )
 
-    loop.attach(ae_model=pipeline.ae)
+    loop.attach(model=pipeline.model)
     loop.state_manager.read_state(loop.logdir / f"{checkpoint}.pth")
 
-    def infer(loop: Loop):
+    def _infer(loop: Loop):
         predict_dataloader(
             loop, pipeline, loader, out_dispatcher, loop.logdir / output_name
         )
 
-    loop.run(infer)
+    loop.run(_infer)
     return None
 
 
@@ -163,7 +153,7 @@ def predict_dataloader(
     dataloader: DataLoader,
     out_dispatcher: OutputDispatcherClr,
     save_dir: Optional[Path] = None,
-):
+) -> None:
     if save_dir is None:
         save_dir = loop.logdir / "default_infer"
 

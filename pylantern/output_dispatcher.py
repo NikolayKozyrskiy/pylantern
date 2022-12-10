@@ -1,4 +1,4 @@
-from typing import Dict, NamedTuple, List
+from typing import Dict, NamedTuple, List, Optional, Any, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -27,7 +27,9 @@ class OutputDispatcher:
         self._prepare_loss_fns()
         self._prepare_metric_fns()
 
-    def compute_losses(self, pipeline: Pipeline) -> LossDispatchResult:
+    def compute_losses(
+        self, pipeline: Pipeline, losses_avg_dict: Optional[Dict[str, Any]] = None
+    ) -> Union[LossDispatchResult, Tuple[LossDispatchResult, Dict]]:
         loss_values = {
             name.replace("__", "/"): getattr(self, name)(pipeline)
             for name in self.train_loss_fn
@@ -59,14 +61,28 @@ class OutputDispatcher:
             aggregated = torch.tensor(0)
 
         loss_values["_total"] = aggregated
+
+        if losses_avg_dict is not None:
+            with torch.no_grad():
+                for name, v in loss_values.items():
+                    losses_avg_dict[name].update(v.detach().mean())
+            return LossDispatchResult(loss_values, aggregated), losses_avg_dict
+
         return LossDispatchResult(loss_values, aggregated)
 
     @torch.no_grad()
-    def compute_metrics(self, pipeline: Pipeline) -> MetricsDispatchResult:
+    def compute_metrics(
+        self, pipeline: Pipeline, metrics_avg_dict: Optional[Dict[str, Any]] = None
+    ) -> Union[MetricsDispatchResult, Tuple[MetricsDispatchResult, Dict]]:
         metric_values = {
             name.replace("__", "/"): getattr(self, name)(pipeline)
             for name in self.metric_fn
         }
+
+        if metrics_avg_dict is not None:
+            for name, v in metric_values.items():
+                metrics_avg_dict[name].update(v.detach().mean())
+            return MetricsDispatchResult(metric_values), metrics_avg_dict
 
         return MetricsDispatchResult(metric_values)
 

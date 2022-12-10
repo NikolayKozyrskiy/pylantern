@@ -1,6 +1,8 @@
 from enum import Enum
+from typing import Dict, Iterable
 
 import numpy as np
+from ignite.metrics.accumulation import Average
 import torch
 from torch.optim import Optimizer
 from matches.loop import IterationType, Loop
@@ -17,13 +19,18 @@ def log_optimizer_lrs(
     optimizer: Optimizer,
     prefix: str = "lr",
     iteration: IterationType = IterationType.AUTO,
-):
+) -> None:
     for i, g in enumerate(optimizer.param_groups):
         loop.metrics.log(f"{prefix}/group_{i}", g["lr"], iteration)
 
 
-def enumerate_normalized(it, len):
-    for i, e in enumerate(it):
+def consume_metric(loop: Loop, avg_dict: Dict[str, Average], prefix: str) -> None:
+    for name, value in avg_dict.items():
+        loop.metrics.consume(f"{prefix}/{name}", value)
+
+
+def enumerate_normalized(iterable: Iterable, len: int):
+    for i, e in enumerate(iterable):
         yield i / len, e
 
 
