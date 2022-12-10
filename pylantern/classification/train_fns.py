@@ -20,6 +20,7 @@ from matches.shortcuts.optimizer import SchedulerScopeType
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
 from ..common.utils import enumerate_normalized, log_optimizer_lrs, consume_metric
+from ..common.visualization import log_images_to_wandb
 from ..output_dispatcher import filter_and_uncollate
 
 from .config import ClassificationConfig
@@ -85,15 +86,14 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
                     scheduler.step(SchedulerScopeType.BATCH, cur_iter)
                 log_optimizer_lrs(loop, optimizer)
 
-                # if epoch_fraction == 0.0:
-                #     # noinspection PyTypeChecker
-                #     with loop.mode("valid"), pipeline.batch_scope(
-                #         convert_tensor(
-                #             train_eval_batch, device=device, non_blocking=True
-                #         )
-                #     ):
-                #         log_images_to_tb_batch(loop, pipeline, "train")
-                #         log_embeddings_to_tb_batch(loop, pipeline, "train")
+                if epoch_fraction == 0.0:
+                    # noinspection PyTypeChecker
+                    with loop.mode("valid"), pipeline.batch_scope(
+                        convert_tensor(
+                            train_eval_batch, device=device, non_blocking=True
+                        )
+                    ):
+                        log_images_to_wandb(loop, pipeline, "train")
 
             if scheduler is not None:
                 scheduler.step(SchedulerScopeType.EPOCH, epoch)
