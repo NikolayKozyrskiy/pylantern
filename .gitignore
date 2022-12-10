@@ -3,6 +3,21 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+_data
+_data/
+tmp
+tmp/
+logs
+logs/
+
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+pyvenv.cfg
+pip-selfcheck.json
+
 # C extensions
 *.so
 

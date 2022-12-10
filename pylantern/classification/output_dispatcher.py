@@ -22,12 +22,12 @@ class OutputDispatcherClr(OutputDispatcher):
     def clr__cross_entropy(
         pipeline: ClassificationPipeline,
     ) -> TensorType["batch_size"]:
-        pred = pipeline.predict_labels()
+        pred = pipeline.predict_logits()
         gt = pipeline.gt_labels()
         return F.cross_entropy(pred, gt, reduction="none")
 
     @staticmethod
     def clr__accuracy(pipeline: ClassificationPipeline) -> TensorType["batch_size"]:
-        pred = pipeline.predict_labels()
+        pred = pipeline.predict_logits()
         gt = pipeline.gt_labels()
         return correct_labels(pred, gt)

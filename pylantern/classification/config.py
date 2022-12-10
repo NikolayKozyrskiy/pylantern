@@ -7,7 +7,7 @@ from torch import nn
 from torchvision import models
 from matches.loop import Loop
 
-from ..config import Config
+from ..config import BaseConfig
 
 if TYPE_CHECKING:
     from .pipeline import ClassificationPipeline
@@ -22,7 +22,7 @@ class ClassificationDatasetName(str, Enum):
     IMAGENET = "imagenet"
 
 
-class ClassificationConfig(Config):
+class ClassificationConfig(BaseConfig):
     num_classes: int
     dataset_name: ClassificationDatasetName = ClassificationDatasetName.CIFAR10
     image_hw: Optional[Tuple[int, int]] = None

@@ -5,13 +5,13 @@ from torch import Tensor
 from matches.shortcuts.dag import ComputationGraph
 
 if TYPE_CHECKING:
-    from .config import Config
+    from .config import BaseConfig
 
 
 class Pipeline(ComputationGraph):
     def __init__(
         self,
-        config: "Config",
+        config: "BaseConfig",
     ):
         super().__init__()
         self.config = config

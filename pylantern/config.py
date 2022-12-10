@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 C = TypeVar("C", bound=Callable)
 
 
-class Config(BaseModel):
+class BaseConfig(BaseModel):
     data_root: str
 
     loss_aggregation_weigths: Dict[str, float]

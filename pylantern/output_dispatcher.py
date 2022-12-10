@@ -66,7 +66,6 @@ class OutputDispatcher:
             with torch.no_grad():
                 for name, v in loss_values.items():
                     losses_avg_dict[name].update(v.detach().mean())
-            return LossDispatchResult(loss_values, aggregated), losses_avg_dict
 
         return LossDispatchResult(loss_values, aggregated)
 
@@ -82,7 +81,6 @@ class OutputDispatcher:
         if metrics_avg_dict is not None:
             for name, v in metric_values.items():
                 metrics_avg_dict[name].update(v.detach().mean())
-            return MetricsDispatchResult(metric_values), metrics_avg_dict
 
         return MetricsDispatchResult(metric_values)
 
@@ -116,7 +114,7 @@ class OutputDispatcher:
         return None
 
 
-def filter_and_uncollate(batch_values: Dict[str, Tensor]):
+def filter_and_uncollate(batch_values: Dict[str, Tensor], pipeline: "Pipeline"):
     batch_values = {k: v.tolist() for k, v in batch_values.items() if k != "_total"}
     return uncollate(batch_values)
 

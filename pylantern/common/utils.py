@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Tuple
 
 import numpy as np
 from ignite.metrics.accumulation import Average
@@ -34,7 +34,11 @@ def enumerate_normalized(iterable: Iterable, len: int):
         yield i / len, e
 
 
-def tensor_to_image(tensor: torch.Tensor, keepdim: bool = False) -> "np.ndarray":
+def tensor_to_image(
+    tensor: torch.Tensor,
+    val_range: Tuple[float, float] = (0.0, 1.0),
+    keepdim: bool = False,
+) -> "np.ndarray":
     if not isinstance(tensor, torch.Tensor):
         raise TypeError(f"Input type is not a torch.Tensor. Got {type(tensor)}")
 
@@ -63,6 +67,9 @@ def tensor_to_image(tensor: torch.Tensor, keepdim: bool = False) -> "np.ndarray"
             image = image.squeeze(-1)
     else:
         raise ValueError(f"Cannot process tensor with shape {input_shape}")
+
+    if val_range[0] == -1.0 and val_range[1] == 1.0:
+        image = image / 2.0 + 0.5
 
     image = (image * 255).clip(0, 255).astype(np.uint8)
     return image

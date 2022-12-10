@@ -48,7 +48,7 @@ class ClassificationDatasetW(Dataset):
         return ClassificationDatasetItem(
             img,
             target,
-            f"{index}_{self.label_name_map[target]}",
+            f"{index}_{self.label_name_map[target]}_label_gt_{target}",
         )
 
     def _get(self, index: int) -> ClassificationDatasetItem:
@@ -56,7 +56,7 @@ class ClassificationDatasetW(Dataset):
         return ClassificationDatasetItem(
             img,
             target,
-            f"{index}",
+            f"{index}_label_gt_{target}",
         )
 
 

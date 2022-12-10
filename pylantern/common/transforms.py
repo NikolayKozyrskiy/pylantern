@@ -4,7 +4,7 @@ import torchvision.transforms as tr
 
 
 def wrap_transforms(transforms: List) -> tr.Compose:
-    return tr.Compose(transforms=transforms + to_tensor())
+    return tr.Compose(transforms=transforms + to_tensor_normalized())
 
 
 def to_tensor() -> List:

@@ -20,13 +20,14 @@ from matches.shortcuts.optimizer import SchedulerScopeType
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
 from ..common.utils import enumerate_normalized, log_optimizer_lrs, consume_metric
-from ..common.visualization import log_images_to_wandb
+from ..common.visualization import log_to_wandb_preview_images
 from ..output_dispatcher import filter_and_uncollate
 
 from .config import ClassificationConfig
 from .data.dataloader import get_train_loader, get_validation_loader
 from .pipeline import ClassificationPipeline, pipeline_from_config
 from .output_dispatcher import OutputDispatcherClr
+from .vis import log_to_wandb_gt_pred_labels
 
 
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
@@ -63,8 +64,8 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     def _train(loop: Loop):
         def handle_batch(batch):
             with pipeline.batch_scope(batch):
-                losses, losses_d = out_dispatcher.compute_losses(pipeline, losses_d)
-                metrics, metrics_d = out_dispatcher.compute_metrics(pipeline, metrics_d)
+                losses = out_dispatcher.compute_losses(pipeline, losses_d)
+                metrics = out_dispatcher.compute_metrics(pipeline, metrics_d)
             return losses.aggregated
 
         # torch.autograd.set_detect_anomaly(True)
@@ -93,7 +94,8 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
                             train_eval_batch, device=device, non_blocking=True
                         )
                     ):
-                        log_images_to_wandb(loop, pipeline, "train")
+                        for fn in config.log_vis_fns:
+                            fn(loop, pipeline, "train")
 
             if scheduler is not None:
                 scheduler.step(SchedulerScopeType.EPOCH, epoch)
