@@ -77,9 +77,8 @@ def get_train_dataset(config: ClassificationConfig) -> ClassificationDatasetW:
             transform=wrap_transforms(config.train_transforms),
         )
     elif config.dataset_name == ClassificationDatasetName.IMAGENET:
-        dataset = datasets.ImageNet(
-            root=config.data_root,
-            split="train",
+        dataset = datasets.ImageFolder(
+            root=f"{config.data_root}/train",
             transform=wrap_transforms(config.train_transforms),
         )
     else:
@@ -108,9 +107,8 @@ def get_validation_dataset(config: ClassificationConfig) -> ClassificationDatase
             transform=wrap_transforms(config.valid_transforms),
         )
     elif config.dataset_name == ClassificationDatasetName.IMAGENET:
-        dataset = datasets.ImageNet(
-            root=config.data_root,
-            split="val",
+        dataset = datasets.ImageFolder(
+            root=f"{config.data_root}/val",
             transform=wrap_transforms(config.valid_transforms),
         )
     else:

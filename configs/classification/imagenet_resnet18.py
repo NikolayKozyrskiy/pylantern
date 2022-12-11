@@ -11,9 +11,10 @@ from typing import (
 
 from pydantic import BaseModel, Field
 from torch import nn
-from torch.optim import Optimizer, SGD
+from torch.optim import Optimizer, SGD, Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision import models
+import torchvision.transforms as tr
 
 from matches.loop import Loop
 from matches.shortcuts.optimizer import (
@@ -44,13 +45,8 @@ C = TypeVar("C", bound=Callable)
 
 
 class Config(ClassificationConfig):
-    # def model(self) -> nn.Module:
-    #     model = models.resnet18(pretrained=True, progress=True)
-    #     model.fc = nn.Linear(512 * model.fc.weight.shape[1], self.num_classes)
-    #     return model
-
     def model(self) -> nn.Module:
-        return resnet18(num_classes=self.num_classes)
+        return models.resnet18(pretrained=True, progress=True)
 
     def resume(self, loop: Loop, pipeline: "ClassificationPipeline"):
         if self.resume_from_checkpoint is not None:
@@ -62,7 +58,7 @@ class Config(ClassificationConfig):
             )
 
     def optimizer(self, model: nn.Module) -> Optimizer:
-        return SGD(model.parameters(), lr=self.lr, momentum=0.9, weight_decay=5e-4)
+        return Adam(model.parameters(), lr=self.lr, weight_decay=1e-6)
 
     def scheduler(self, optimizer: Optimizer) -> Optional[LRSchedulerProto]:
         return LRSchedulerWrapper(
@@ -88,20 +84,25 @@ class Config(ClassificationConfig):
 
 
 config = Config(
-    data_root="_data",
-    num_classes=10,
-    dataset_name=ClassificationDatasetName.CIFAR10,
-    image_hw=(32, 32),
+    data_root="_data/ILSVRC-12",
+    num_classes=1000,
+    dataset_name=ClassificationDatasetName.IMAGENET,
+    image_hw=(256, 256),
     loss_aggregation_weigths={"clr/cross_entropy": 1.0},
     metrics=["clr/accuracy"],
     monitor="valid/clr/accuracy",
-    batch_size_train=200,
-    batch_size_valid=250,
-    lr=1e-1,
+    batch_size_train=128,
+    batch_size_valid=200,
+    lr=1e-3,
     max_epoch=100,
-    train_transforms=train_basic_augs(crop_size=(32, 32)),
-    valid_transforms=[],
-    comment="cifar10_resnet18",
+    train_transforms=[
+        tr.RandomResizedCrop(224),
+        tr.RandomHorizontalFlip(),
+        tr.RandomRotation(30),
+        tr.ColorJitter(0.2, 0.2, 0.2, 0.2),
+    ],
+    valid_transforms=[tr.Resize(256), tr.CenterCrop(224)],
+    comment="imagenet_resnet18",
     train_loader_workers=8,
     valid_loader_workers=10,
     single_pass_length=1.0,
@@ -109,5 +110,5 @@ config = Config(
     shuffle_train=True,
     output_config=[],
     preview_image_fns=[],
-    log_vis_fns=[log_to_wandb_gt_pred_labels],
+    log_vis_fns=[],
 )
