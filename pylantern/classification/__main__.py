@@ -13,6 +13,7 @@ import typer
 from ..config import load_config
 from ..common.utils import DevMode
 from .config import ClassificationConfig
+from .config_generator import ConfigGenerator, load_config_generator
 from .train_fns import train_fn, infer_fn
 
 
@@ -49,6 +50,45 @@ def train(
         DDPAccelerator(gpus),
         config=config,
     )
+
+
+@app.command()
+def train_replays(
+    config_generator_path: Path,
+    root_log_dir: Path,
+    comment_postfix: str = typer.Option(None, "--comment-postfix", "-C"),
+    gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
+    dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
+):
+    copy(
+        config_generator_path,
+        root_log_dir / "config_generator.py",
+        follow_symlinks=True,
+    )
+    config_generator: ConfigGenerator = load_config_generator(config_generator_path)
+    for idx, config in enumerate(config_generator()):
+        comment = (
+            f"{config.comment}__{comment_postfix}_genit_{idx}"
+            if comment_postfix is not None
+            else f"{config.comment}__genit_{idx}"
+        )
+        config.comment = comment
+
+        logdir = root_log_dir / comment
+        logdir.mkdir(exist_ok=True, parents=True)
+
+        copy(config_path, logdir / "config.py", follow_symlinks=True)
+        loop = Loop(
+            logdir,
+            config.train_callbacks(dev_mode != dev_mode.DISABLED),
+            loader_override=dev_mode.value,
+        )
+
+        loop.launch(
+            train_fn,
+            DDPAccelerator(gpus),
+            config=config,
+        )
 
 
 @app.command()
