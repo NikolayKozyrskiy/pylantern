@@ -1,5 +1,7 @@
 from enum import Enum
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, Tuple, Any, Union
+from pathlib import Path
+import pickle
 
 import numpy as np
 from ignite.metrics.accumulation import Average
@@ -12,6 +14,23 @@ class DevMode(str, Enum):
     DISABLED = "disabled"
     SHORT = "short"
     OVERFIT_BATCH = "overfit-batch"
+
+
+def pickle_dump(obj: Any, file_path: Union[Path, str]) -> None:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".pkl"):
+        _file_path += ".pkl"
+    with open(_file_path, "wb") as f:
+        pickle.dump(obj, f)
+
+
+def pickle_load(file_path: Union[Path, str]) -> Any:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".pkl"):
+        _file_path += ".pkl"
+    with open(_file_path, "rb") as f:
+        obj = pickle.load(f)
+    return obj
 
 
 def log_optimizer_lrs(

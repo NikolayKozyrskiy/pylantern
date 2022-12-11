@@ -16,7 +16,16 @@ class ConfigGenerator:
         self.base_config_class = base_config_class
         self.variable_parameters = variable_parameters
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> Generator[BaseConfig]:
+        return self.iterate_configs()
+
+    def preprocess(self, *args: Any, **kwargs: Any):
+        pass
+
+    def postprocess(self, *args: Any, **kwargs: Any):
+        pass
+
+    def iterate_configs(self, *args: Any, **kwargs: Any) -> Generator[BaseConfig]:
         for param_dict in dict_cross_product(self.variable_parameters):
             config = load_config(self.base_config_path, self.base_config_class)
             for k, v in param_dict.items():
@@ -28,6 +37,7 @@ def dict_cross_product(input_dict: Dict[str, List[Any]]) -> Generator[Dict[str, 
     return (
         dict(zip(input_dict.keys(), values)) for values in product(*input_dict.values())
     )
+
 
 def load_config_generator(config_generator_path: Path):
     text = config_generator_path.read_text()

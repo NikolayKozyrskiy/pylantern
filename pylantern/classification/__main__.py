@@ -11,7 +11,7 @@ from matches.utils import unique_logdir
 import typer
 
 from ..config import load_config
-from ..common.utils import DevMode
+from ..common.utils import DevMode, pickle_load, pickle_dump
 from .config import ClassificationConfig
 from .config_generator import ConfigGenerator, load_config_generator
 from .train_fns import train_fn, infer_fn
@@ -77,7 +77,10 @@ def train_replays(
         logdir = root_log_dir / comment
         logdir.mkdir(exist_ok=True, parents=True)
 
-        copy(config_path, logdir / "config.py", follow_symlinks=True)
+        pickle_dump(
+            config,
+            logdir / "config.pkl",
+        )
         loop = Loop(
             logdir,
             config.train_callbacks(dev_mode != dev_mode.DISABLED),

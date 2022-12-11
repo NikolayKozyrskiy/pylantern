@@ -29,6 +29,7 @@ from matches.callbacks import (
 )
 
 from .common.wandb import WandBLoggingSink
+from .common.utils import pickle_load
 
 if TYPE_CHECKING:
     from .pipeline import Pipeline
@@ -98,12 +99,19 @@ class BaseConfig(BaseModel):
 
 
 def load_config(config_path: Path, desired_class):
-    text = config_path.read_text()
-
-    ctx = {}
-    exec(text, ctx)
-
-    config = ctx["config"]
+    if str(config_path).endswith(".py"):
+        config = _load_config_from_py(config_path)
+    elif str(config_path).endswith(".pkl"):
+        config = pickle_load(config_path)
+    else:
+        raise ValueError(f"Given config file {config_path.stem} is not supported!")
 
     assert isinstance(config, desired_class), (config.__class__, desired_class)
     return config
+
+
+def _load_config_from_py(config_path: Path):
+    text = config_path.read_text()
+    ctx = {}
+    exec(text, ctx)
+    return ctx["config"]
