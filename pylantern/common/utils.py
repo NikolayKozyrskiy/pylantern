@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import Dict, Iterable, Tuple, Any, Union
+import json
+from typing import Dict, Iterable, Tuple, Any, Union, List
 from pathlib import Path
 import pickle
 
@@ -14,23 +15,6 @@ class DevMode(str, Enum):
     DISABLED = "disabled"
     SHORT = "short"
     OVERFIT_BATCH = "overfit-batch"
-
-
-def pickle_dump(obj: Any, file_path: Union[Path, str]) -> None:
-    _file_path = str(file_path)
-    if not _file_path.endswith(".pkl"):
-        _file_path += ".pkl"
-    with open(_file_path, "wb") as f:
-        pickle.dump(obj, f)
-
-
-def pickle_load(file_path: Union[Path, str]) -> Any:
-    _file_path = str(file_path)
-    if not _file_path.endswith(".pkl"):
-        _file_path += ".pkl"
-    with open(_file_path, "rb") as f:
-        obj = pickle.load(f)
-    return obj
 
 
 def log_optimizer_lrs(
@@ -92,3 +76,50 @@ def tensor_to_image(
 
     image = (image * 255).clip(0, 255).astype(np.uint8)
     return image
+
+
+def dump_pickle(obj: Any, file_path: Union[Path, str]) -> None:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".pkl"):
+        _file_path += ".pkl"
+    with open(_file_path, "wb") as f:
+        pickle.dump(obj, f)
+    return None
+
+
+def load_pickle(file_path: Union[Path, str]) -> Any:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".pkl"):
+        _file_path += ".pkl"
+    with open(_file_path, "rb") as f:
+        obj = pickle.load(f)
+    return obj
+
+
+def dump_json(
+    obj: Dict[Any, Any], file_path: Union[Path, str], indent: int = 2
+) -> None:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".json"):
+        _file_path += ".json"
+    with open(_file_path, "w") as f:
+        json.dump(obj, f, indent=indent)
+    return None
+
+
+def load_json(file_path: Union[Path, str]) -> Dict[Any, Any]:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".json"):
+        _file_path += ".json"
+    with open(_file_path, "r") as f:
+        res = json.load(f)
+    return res
+
+
+def dump_txt(obj: Any, file_path: Union[Path, str]) -> None:
+    _file_path = str(file_path)
+    if not _file_path.endswith(".txt"):
+        _file_path += ".txt"
+    with open(_file_path, "w") as f:
+        f.write(str(obj))
+    return None

@@ -1,13 +1,6 @@
 from concurrent.futures import Executor
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field
 from torch.nn import Module
@@ -29,7 +22,7 @@ from matches.callbacks import (
 )
 
 from .common.wandb import WandBLoggingSink
-from .common.utils import pickle_load
+from .common.utils import load_pickle, dump_json, dump_txt
 
 if TYPE_CHECKING:
     from .pipeline import Pipeline
@@ -98,11 +91,21 @@ class BaseConfig(BaseModel):
         return [TqdmProgressCallback()]
 
 
-def load_config(config_path: Path, desired_class):
+def dump_config_json(config: BaseConfig, save_path: Union[Path, str]) -> None:
+    dump_json(config.json(indent=2), save_path, indent=2)
+    return None
+
+
+def dump_config_txt(config: BaseConfig, save_path: Union[Path, str]) -> None:
+    dump_txt(config.dict(), save_path)
+    return None
+
+
+def load_config(config_path: Union[Path, str], desired_class):
     if str(config_path).endswith(".py"):
         config = _load_config_from_py(config_path)
     elif str(config_path).endswith(".pkl"):
-        config = pickle_load(config_path)
+        config = load_pickle(config_path)
     else:
         raise ValueError(f"Given config file {config_path.stem} is not supported!")
 
@@ -115,3 +118,12 @@ def _load_config_from_py(config_path: Path):
     ctx = {}
     exec(text, ctx)
     return ctx["config"]
+
+
+if __name__ == "__main__":
+    conf = BaseConfig(
+        data_root="_a", loss_aggregation_weigths={"l": 1.0}, metrics=["m"]
+    )
+    print(conf.json(indent=2))
+    print("=" * 100)
+    print(conf.dict())

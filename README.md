@@ -2,7 +2,8 @@
 Repo for various experiments with DNNs
 
 TODO:
-* Implement processor for multi-config mode with replays
+* Add VanillaAccelerator to matches for multi-config mode with replays
+* Implement multi-config mode with replays
 * Switch to Albumentations
 * Classification:
     * Implement soft labels CE loss

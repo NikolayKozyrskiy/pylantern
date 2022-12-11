@@ -10,10 +10,10 @@ from matches.loop import Loop
 from matches.utils import unique_logdir
 import typer
 
-from ..config import load_config
-from ..common.utils import DevMode, pickle_load, pickle_dump
+from ..config import load_config, dump_config_json, dump_config_txt
+from ..config_generator import ConfigGenerator, load_config_generator
+from ..common.utils import DevMode, load_pickle, dump_pickle
 from .config import ClassificationConfig
-from .config_generator import ConfigGenerator, load_config_generator
 from .train_fns import train_fn, infer_fn
 
 
@@ -60,6 +60,7 @@ def train_replays(
     gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
     dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
 ):
+    root_log_dir.mkdir(exist_ok=True, parents=True)
     copy(
         config_generator_path,
         root_log_dir / "config_generator.py",
@@ -76,11 +77,10 @@ def train_replays(
 
         logdir = root_log_dir / comment
         logdir.mkdir(exist_ok=True, parents=True)
+        # dump_config_json(config, logdir / "config.json")
+        dump_config_txt(config, logdir / "config")
+        # dump_pickle(config, logdir / "config.pkl")
 
-        pickle_dump(
-            config,
-            logdir / "config.pkl",
-        )
         loop = Loop(
             logdir,
             config.train_callbacks(dev_mode != dev_mode.DISABLED),
