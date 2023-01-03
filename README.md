@@ -2,7 +2,6 @@
 Repo for various experiments with DNNs
 
 TODO:
-* Add VanillaAccelerator to matches for multi-config mode with replays
 * Implement multi-config mode with replays
 * Switch to Albumentations
 * Classification:

@@ -5,10 +5,11 @@ from pathlib import Path
 from shutil import copy
 from typing import List, Optional
 
-from matches.accelerators import DDPAccelerator
+from matches.accelerators import DDPAccelerator, VanillaAccelerator
 from matches.loop import Loop
 from matches.utils import unique_logdir
 import typer
+import torch.cuda
 
 from ..config import load_config, dump_config_json, dump_config_txt
 from ..config_generator import ConfigGenerator, load_config_generator
@@ -47,7 +48,7 @@ def train(
 
     loop.launch(
         train_fn,
-        DDPAccelerator(gpus),
+        DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
         config=config,
     )
 
@@ -89,7 +90,7 @@ def train_replays(
 
         loop.launch(
             train_fn,
-            DDPAccelerator(gpus),
+            DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
             config=config,
         )
 
@@ -111,7 +112,7 @@ def infer(
 
     loop.launch(
         infer_fn,
-        DDPAccelerator(gpus),
+        DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
         config=config,
         checkpoint=checkpoint,
         data_root=data_root,
