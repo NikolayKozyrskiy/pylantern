@@ -1,0 +1,12 @@
+black==22.6.0
+typer==0.6.1
+wandb==0.13.5
+imageio==2.19.3
+pydantic==1.9.0
+matplotlib==3.5.2
+tensorboard==2.11.0
+ipython==8.6.0
+notebook==6.5.2
+pandas==1.4.4
+albumentations==1.1.0
+torchtyping==0.1.4
