@@ -75,7 +75,6 @@ class Config(ClassificationConfig):
         pass
 
     def train_callbacks(self, dev: bool, *args, **kwargs) -> List[Callback]:
-        # callbacks = [WandBLoggingSink(self.comment, self), TqdmProgressCallback()]
         callbacks = [
             WandBLoggingSink(self.comment, self.dict()),
             TqdmProgressCallback(),

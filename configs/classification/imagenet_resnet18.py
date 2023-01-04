@@ -28,9 +28,9 @@ from matches.callbacks import (
     TqdmProgressCallback,
     LastModelSaverCallback,
     EnsureWorkdirCleanOrDevMode,
+    WandBLoggingSink,
 )
 
-from pylantern.common.wandb import WandBLoggingSink
 from pylantern.classification.config import (
     ClassificationConfig,
     ClassificationDatasetName,
@@ -70,7 +70,10 @@ class Config(ClassificationConfig):
         pass
 
     def train_callbacks(self, dev: bool, *args, **kwargs) -> List[Callback]:
-        callbacks = [WandBLoggingSink(self.comment, self), TqdmProgressCallback()]
+        callbacks = [
+            WandBLoggingSink(self.comment, self.dict()),
+            TqdmProgressCallback(),
+        ]
         if not dev:
             callbacks += [
                 # EnsureWorkdirCleanOrDevMode(),

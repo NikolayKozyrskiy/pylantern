@@ -1,6 +1,6 @@
 from enum import Enum
 import json
-from typing import Dict, Iterable, Tuple, Any, Union, List
+from typing import Dict, Iterable, Tuple, Any, Union, List, Optional, TYPE_CHECKING
 from pathlib import Path
 import pickle
 
@@ -9,6 +9,10 @@ from ignite.metrics.accumulation import Average
 import torch
 from torch.optim import Optimizer
 from matches.loop import IterationType, Loop
+from matches.utils import unique_logdir
+
+if TYPE_CHECKING:
+    from ..config import BaseConfig
 
 
 class DevMode(str, Enum):
@@ -18,10 +22,26 @@ class DevMode(str, Enum):
 
 
 def get_device() -> str:
-    if torch.cuda.is_available():
-        return f"cuda:{torch.cuda.current_device()}"
-    else:
-        return "cpu"
+    device = (
+        f"cuda:{torch.cuda.current_device()}" if torch.cuda.is_available() else "cpu"
+    )
+    return device
+
+
+def prepare_comment(
+    comment: Optional[str], config_path: Union[Path, str], config: "BaseConfig"
+) -> Tuple[str, "BaseConfig"]:
+    comment = comment or config.comment
+    if comment is None:
+        comment = Path(config_path).stem
+    config.comment = comment
+    return comment, config
+
+
+def prepare_logdir(logdir: Optional[Path], comment: str) -> Path:
+    logdir = logdir or unique_logdir(Path("logs/"), comment)
+    logdir.mkdir(exist_ok=True, parents=True)
+    return logdir
 
 
 def log_optimizer_lrs(

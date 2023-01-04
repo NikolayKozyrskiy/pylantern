@@ -12,7 +12,13 @@ import typer
 
 from ..config import load_config, dump_config_json, dump_config_txt
 from ..config_generator import ConfigGenerator, load_config_generator
-from ..common.utils import DevMode, load_pickle, dump_pickle
+from ..common.utils import (
+    DevMode,
+    load_pickle,
+    dump_pickle,
+    prepare_logdir,
+    prepare_comment,
+)
 from .config import ClassificationConfig
 from .train_fns import train_fn, infer_fn
 
@@ -29,14 +35,8 @@ def train(
     dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
 ):
     config: ClassificationConfig = load_config(config_path, ClassificationConfig)
-
-    comment = comment or config.comment
-    if comment is None:
-        comment = config_path.stem
-    config.comment = comment
-
-    logdir = logdir or unique_logdir(Path("logs/"), comment)
-    logdir.mkdir(exist_ok=True, parents=True)
+    comment, config = prepare_comment(comment, config_path, config)
+    logdir = prepare_logdir(logdir, comment)
 
     copy(config_path, logdir / "config.py", follow_symlinks=True)
     loop = Loop(
