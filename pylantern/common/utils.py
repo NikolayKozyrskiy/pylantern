@@ -17,6 +17,13 @@ class DevMode(str, Enum):
     OVERFIT_BATCH = "overfit-batch"
 
 
+def get_device() -> str:
+    if torch.cuda.is_available():
+        return f"cuda:{torch.cuda.current_device()}"
+    else:
+        return "cpu"
+
+
 def log_optimizer_lrs(
     loop: Loop,
     optimizer: Optimizer,

@@ -9,7 +9,6 @@ from matches.accelerators import DDPAccelerator, VanillaAccelerator
 from matches.loop import Loop
 from matches.utils import unique_logdir
 import typer
-import torch.cuda
 
 from ..config import load_config, dump_config_json, dump_config_txt
 from ..config_generator import ConfigGenerator, load_config_generator

@@ -8,21 +8,23 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import ignite.distributed as idist
 from ignite.utils import convert_tensor
 from ignite.distributed.auto import auto_dataloader
 from ignite.metrics.accumulation import Average
 import pandas as pd
 
 from matches.loop import Loop
-from matches.loop.loader_scheduling import DataloaderSchedulerWrapper
 from matches.shortcuts.optimizer import SchedulerScopeType
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
-from ..common.utils import enumerate_normalized, log_optimizer_lrs, consume_metric
+from ..common.utils import (
+    enumerate_normalized,
+    log_optimizer_lrs,
+    consume_metric,
+    get_device,
+)
 from ..common.visualization import log_to_wandb_preview_images
 from ..output_dispatcher import filter_and_uncollate
-
 from .config import ClassificationConfig
 from .data.dataloader import get_train_loader, get_validation_loader
 from .pipeline import ClassificationPipeline, pipeline_from_config
@@ -37,7 +39,7 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     seed_everything(42)
     setup_cudnn_reproducibility(False, True)
 
-    device = f"cuda:{torch.cuda.current_device()}"
+    device = get_device()
 
     train_loader = loop._loader_override(get_train_loader(config), "train")
     valid_loader = loop._loader_override(get_validation_loader(config), "valid")
@@ -125,7 +127,7 @@ def infer_fn(
     data_root: Optional[Path] = None,
     output_name: Optional[str] = None,
 ) -> None:
-    device = f"cuda:{torch.cuda.current_device()}"
+    device = get_device()
 
     data_root = config.data_root if data_root is None else data_root
     output_name = checkpoint if output_name is None else output_name
