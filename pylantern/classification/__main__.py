@@ -18,6 +18,8 @@ from ..common.utils import (
     dump_pickle,
     prepare_logdir,
     prepare_comment,
+    copy_config,
+    copy_config_generator,
 )
 from .config import ClassificationConfig
 from .train_fns import train_fn, infer_fn
@@ -37,14 +39,13 @@ def train(
     config: ClassificationConfig = load_config(config_path, ClassificationConfig)
     comment, config = prepare_comment(comment, config_path, config)
     logdir = prepare_logdir(logdir, comment)
+    copy_config(config_path, logdir)
 
-    copy(config_path, logdir / "config.py", follow_symlinks=True)
     loop = Loop(
         logdir,
         config.train_callbacks(dev_mode != dev_mode.DISABLED),
         loader_override=dev_mode.value,
     )
-
     loop.launch(
         train_fn,
         DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
@@ -61,12 +62,9 @@ def train_replays(
     dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
 ):
     root_log_dir.mkdir(exist_ok=True, parents=True)
-    copy(
-        config_generator_path,
-        root_log_dir / "config_generator.py",
-        follow_symlinks=True,
-    )
+    copy_config_generator(config_generator_path, root_log_dir)
     config_generator: ConfigGenerator = load_config_generator(config_generator_path)
+
     for idx, config in enumerate(config_generator()):
         comment = (
             f"{config.comment}__{comment_postfix}_genit_{idx}"
@@ -108,7 +106,6 @@ def infer(
         logdir,
         config.valid_callbacks(),
     )
-
     loop.launch(
         infer_fn,
         DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),

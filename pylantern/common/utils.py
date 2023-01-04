@@ -1,8 +1,19 @@
 from enum import Enum
 import json
-from typing import Dict, Iterable, Tuple, Any, Union, List, Optional, TYPE_CHECKING
+from typing import (
+    Dict,
+    Iterable,
+    Tuple,
+    Any,
+    Union,
+    List,
+    Optional,
+    TYPE_CHECKING,
+    Type,
+)
 from pathlib import Path
 import pickle
+from shutil import copy
 
 import numpy as np
 from ignite.metrics.accumulation import Average
@@ -42,6 +53,20 @@ def prepare_logdir(logdir: Optional[Path], comment: str) -> Path:
     logdir = logdir or unique_logdir(Path("logs/"), comment)
     logdir.mkdir(exist_ok=True, parents=True)
     return logdir
+
+
+def copy_config(config_path: Union[Path, str], logdir: Path) -> None:
+    copy(config_path, logdir / "config.py", follow_symlinks=True)
+
+
+def copy_config_generator(
+    config_generator_path: Union[Path, str], root_log_dir: Path
+) -> None:
+    copy(
+        config_generator_path,
+        root_log_dir / "config_generator.py",
+        follow_symlinks=True,
+    )
 
 
 def log_optimizer_lrs(
