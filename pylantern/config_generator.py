@@ -32,11 +32,18 @@ class ConfigGenerator:
         for iter_idx, param_dict in enumerate(
             dict_cross_product(self.variable_parameters)
         ):
-            self._cur_iter_idx = iter_idx
-            config = load_config(self.base_config_path, self.base_config_class)
-            for k, v in param_dict.items():
-                config.__setattr__(k, v)
+            config = self._compile_config(param_dict)
             yield config
+
+    def get_config(self, config_idx: int) -> BaseConfig:
+        config_params = list(dict_cross_product(self.variable_parameters))
+        return self._compile_config(config_params[config_idx])
+
+    def _compile_config(self, param_dict: Dict[str, Any]) -> BaseConfig:
+        config = load_config(self.base_config_path, self.base_config_class)
+        for k, v in param_dict.items():
+            config.__setattr__(k, v)
+        return config
 
 
 def dict_cross_product(

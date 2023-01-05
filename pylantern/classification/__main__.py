@@ -54,7 +54,7 @@ def train(
 
 
 @app.command()
-def train_replays(
+def train_config_generator(
     config_generator_path: Path,
     root_log_dir: Path,
     comment_postfix: str = typer.Option(None, "--comment-postfix", "-C"),
@@ -64,13 +64,12 @@ def train_replays(
     root_log_dir.mkdir(exist_ok=True, parents=True)
     copy_config_generator(config_generator_path, root_log_dir)
     config_generator: ConfigGenerator = load_config_generator(config_generator_path)
+    copy_config(config_generator.base_config_path, root_log_dir)
 
     for idx, config in enumerate(config_generator()):
-        comment = (
-            f"{config.comment}__{comment_postfix}_genit_{idx}"
-            if comment_postfix is not None
-            else f"{config.comment}__genit_{idx}"
-        )
+        comment = f"{idx:02d}__{config.comment}"
+        if comment_postfix is not None:
+            comment += f"_{comment_postfix}"
         config.comment = comment
 
         logdir = root_log_dir / comment

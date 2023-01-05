@@ -30,7 +30,6 @@ from matches.callbacks import (
     WandBLoggingSink,
 )
 
-# from pylantern.common.wandb import WandBLoggingSink
 from pylantern.classification.config import (
     ClassificationConfig,
     ClassificationDatasetName,
@@ -102,7 +101,7 @@ config = Config(
     batch_size_train=100,
     batch_size_valid=200,
     lr=1e-1,
-    max_epoch=3,
+    max_epoch=100,
     train_transforms=train_basic_augs(crop_size=(32, 32)),
     valid_transforms=[],
     comment="cifar10_resnet18",

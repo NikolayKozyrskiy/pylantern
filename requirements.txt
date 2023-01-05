@@ -8,3 +8,4 @@ notebook==6.5.2
 pandas==1.4.4
 albumentations==1.1.0
 torchtyping==0.1.4
+wandb>=0.13.5
