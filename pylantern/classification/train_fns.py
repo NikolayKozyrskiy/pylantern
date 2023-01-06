@@ -7,9 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from ignite.utils import convert_tensor
-from ignite.distributed.auto import auto_dataloader
 from ignite.metrics.accumulation import Average
-import pandas as pd
 
 from matches.loop import Loop
 from matches.shortcuts.optimizer import SchedulerScopeType

@@ -3,7 +3,7 @@ from pathlib import Path
 import typer
 
 from ..common.utils import DevMode
-from ..common.train_utils import (
+from ..main_routines import (
     train_routine,
     train_config_generator_routine,
     infer_routine,
