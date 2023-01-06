@@ -21,7 +21,7 @@ from ..common.utils import (
     consume_metric,
     get_device,
 )
-from ..common.infer_utils import predict_dataloader
+from ..common.train_utils import predict_dataloader
 from .config import ClassificationConfig
 from .data.dataloader import get_train_loader, get_validation_loader
 from .pipeline import ClassificationPipeline, pipeline_from_config
@@ -56,8 +56,8 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     losses_d = defaultdict(lambda: Average(device=device))
     metrics_d = defaultdict(lambda: Average(device=device))
 
-    if scheduler is not None:
-        loop.attach(scheduler=scheduler)
+    # if scheduler is not None:
+    #     loop.attach(scheduler=scheduler)
 
     def _train(loop: Loop):
         def handle_batch(batch):
@@ -143,7 +143,9 @@ def infer_fn(
     )
 
     loop.attach(model=pipeline.model)
-    loop.state_manager.read_state(loop.logdir / f"{checkpoint}.pth")
+    loop.state_manager.read_state(
+        loop.logdir / f"{checkpoint}.pth", skip_keys=["optimizer", "scheduler"]
+    )
 
     def _infer(loop: Loop):
         predict_dataloader(
