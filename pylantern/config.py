@@ -19,9 +19,9 @@ from matches.callbacks import (
     TqdmProgressCallback,
     LastModelSaverCallback,
     EnsureWorkdirCleanOrDevMode,
+    WandBLoggingSink,
 )
 
-from .common.wandb import WandBLoggingSink
 from .common.utils import load_pickle, dump_json, dump_txt
 
 if TYPE_CHECKING:
@@ -78,7 +78,10 @@ class BaseConfig(BaseModel):
         pass
 
     def train_callbacks(self, dev: bool, *args, **kwargs) -> List[Callback]:
-        callbacks = [WandBLoggingSink(self.comment, self), TqdmProgressCallback()]
+        callbacks = [
+            WandBLoggingSink(self.comment, self.dict()),
+            TqdmProgressCallback(),
+        ]
         if not dev:
             callbacks += [
                 EnsureWorkdirCleanOrDevMode(),

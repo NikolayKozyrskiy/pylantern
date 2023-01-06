@@ -1,20 +1,72 @@
 from enum import Enum
 import json
-from typing import Dict, Iterable, Tuple, Any, Union, List
+from typing import (
+    Dict,
+    Iterable,
+    Tuple,
+    Any,
+    Union,
+    List,
+    Optional,
+    TYPE_CHECKING,
+    Type,
+)
 from pathlib import Path
 import pickle
+from shutil import copy
 
 import numpy as np
 from ignite.metrics.accumulation import Average
 import torch
 from torch.optim import Optimizer
 from matches.loop import IterationType, Loop
+from matches.utils import unique_logdir
+
+if TYPE_CHECKING:
+    from ..config import BaseConfig
 
 
 class DevMode(str, Enum):
     DISABLED = "disabled"
     SHORT = "short"
     OVERFIT_BATCH = "overfit-batch"
+
+
+def get_device() -> str:
+    device = (
+        f"cuda:{torch.cuda.current_device()}" if torch.cuda.is_available() else "cpu"
+    )
+    return device
+
+
+def prepare_comment(
+    comment: Optional[str], config_path: Union[Path, str], config: "BaseConfig"
+) -> Tuple[str, "BaseConfig"]:
+    comment = comment or config.comment
+    if comment is None:
+        comment = Path(config_path).stem
+    config.comment = comment
+    return comment, config
+
+
+def prepare_logdir(logdir: Optional[Path], comment: str) -> Path:
+    logdir = logdir or unique_logdir(Path("logs/"), comment)
+    logdir.mkdir(exist_ok=True, parents=True)
+    return logdir
+
+
+def copy_config(config_path: Union[Path, str], logdir: Path) -> None:
+    copy(config_path, logdir / "config.py", follow_symlinks=True)
+
+
+def copy_config_generator(
+    config_generator_path: Union[Path, str], root_log_dir: Path
+) -> None:
+    copy(
+        config_generator_path,
+        root_log_dir / "config_generator.py",
+        follow_symlinks=True,
+    )
 
 
 def log_optimizer_lrs(

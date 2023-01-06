@@ -1,5 +1,4 @@
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import List, Optional
 import warnings
@@ -7,27 +6,24 @@ import warnings
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-import ignite.distributed as idist
 from ignite.utils import convert_tensor
-from ignite.distributed.auto import auto_dataloader
 from ignite.metrics.accumulation import Average
-import pandas as pd
 
 from matches.loop import Loop
-from matches.loop.loader_scheduling import DataloaderSchedulerWrapper
 from matches.shortcuts.optimizer import SchedulerScopeType
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
-from ..common.utils import enumerate_normalized, log_optimizer_lrs, consume_metric
-from ..common.visualization import log_to_wandb_preview_images
-from ..output_dispatcher import filter_and_uncollate
-
+from ..common.utils import (
+    enumerate_normalized,
+    log_optimizer_lrs,
+    consume_metric,
+    get_device,
+)
+from ..common.train_utils import predict_dataloader
 from .config import ClassificationConfig
 from .data.dataloader import get_train_loader, get_validation_loader
 from .pipeline import ClassificationPipeline, pipeline_from_config
 from .output_dispatcher import OutputDispatcherClr
-from .vis import log_to_wandb_gt_pred_labels
 
 
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
@@ -37,7 +33,7 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     seed_everything(42)
     setup_cudnn_reproducibility(False, True)
 
-    device = f"cuda:{torch.cuda.current_device()}"
+    device = get_device()
 
     train_loader = loop._loader_override(get_train_loader(config), "train")
     valid_loader = loop._loader_override(get_validation_loader(config), "valid")
@@ -58,8 +54,8 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     losses_d = defaultdict(lambda: Average(device=device))
     metrics_d = defaultdict(lambda: Average(device=device))
 
-    if scheduler is not None:
-        loop.attach(scheduler=scheduler)
+    # if scheduler is not None:
+    #     loop.attach(scheduler=scheduler)
 
     def _train(loop: Loop):
         def handle_batch(batch):
@@ -113,7 +109,14 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
             consume_metric(loop, losses_d, prefix="valid")
             consume_metric(loop, metrics_d, prefix="valid")
 
-        predict_dataloader(loop, pipeline, valid_loader, out_dispatcher)
+        predict_dataloader(
+            loop,
+            pipeline,
+            valid_loader,
+            out_dispatcher,
+            loop.logdir / "valid_infer",
+            verbose=True,
+        )
 
     loop.run(_train)
 
@@ -125,7 +128,7 @@ def infer_fn(
     data_root: Optional[Path] = None,
     output_name: Optional[str] = None,
 ) -> None:
-    device = f"cuda:{torch.cuda.current_device()}"
+    device = get_device()
 
     data_root = config.data_root if data_root is None else data_root
     output_name = checkpoint if output_name is None else output_name
@@ -138,62 +141,19 @@ def infer_fn(
     )
 
     loop.attach(model=pipeline.model)
-    loop.state_manager.read_state(loop.logdir / f"{checkpoint}.pth")
+    loop.state_manager.read_state(
+        loop.logdir / f"{checkpoint}.pth", skip_keys=["optimizer", "scheduler"]
+    )
 
     def _infer(loop: Loop):
         predict_dataloader(
-            loop, pipeline, loader, out_dispatcher, loop.logdir / output_name
+            loop,
+            pipeline,
+            loader,
+            out_dispatcher,
+            loop.logdir / output_name,
+            verbose=True,
         )
 
     loop.run(_infer)
     return None
-
-
-def predict_dataloader(
-    loop: Loop,
-    pipeline: ClassificationPipeline,
-    dataloader: DataLoader,
-    out_dispatcher: OutputDispatcherClr,
-    save_dir: Optional[Path] = None,
-) -> None:
-    if save_dir is None:
-        save_dir = loop.logdir / "default_infer"
-
-    save_dir.mkdir(parents=True, exist_ok=True)
-
-    losses, metrics = [], []
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        for batch in loop.iterate_dataloader(dataloader):
-            with pipeline.batch_scope(batch):
-
-                for f in pipeline.config.output_config:
-                    f(
-                        pipeline,
-                        pool,
-                        save_dir,
-                        name_postfix=str(save_dir).split("/")[1],
-                    )
-
-                losses.extend(
-                    filter_and_uncollate(
-                        out_dispatcher.compute_losses(pipeline).computed_values,
-                        pipeline,
-                    )
-                )
-                metrics.extend(
-                    filter_and_uncollate(
-                        out_dispatcher.compute_metrics(pipeline).computed_values,
-                        pipeline,
-                    )
-                )
-
-    def _dump(data: List, name: str):
-        data = pd.DataFrame(data)
-        data.to_csv(save_dir / f"{name}.csv")
-        mean = data.mean(numeric_only=True)
-        print(mean)
-        (save_dir / f"{name}_mean.txt").write_text(str(mean))
-        return None
-
-    _dump(losses, "losses")
-    _dump(metrics, "metrics")

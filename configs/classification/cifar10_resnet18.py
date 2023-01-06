@@ -27,9 +27,9 @@ from matches.callbacks import (
     TqdmProgressCallback,
     LastModelSaverCallback,
     EnsureWorkdirCleanOrDevMode,
+    WandBLoggingSink,
 )
 
-from pylantern.common.wandb import WandBLoggingSink
 from pylantern.classification.config import (
     ClassificationConfig,
     ClassificationDatasetName,
@@ -74,7 +74,10 @@ class Config(ClassificationConfig):
         pass
 
     def train_callbacks(self, dev: bool, *args, **kwargs) -> List[Callback]:
-        callbacks = [WandBLoggingSink(self.comment, self), TqdmProgressCallback()]
+        callbacks = [
+            WandBLoggingSink(self.comment, self.dict()),
+            TqdmProgressCallback(),
+        ]
         if not dev:
             callbacks += [
                 # EnsureWorkdirCleanOrDevMode(),
@@ -95,16 +98,16 @@ config = Config(
     loss_aggregation_weigths={"clr/cross_entropy": 1.0},
     metrics=["clr/accuracy"],
     monitor="valid/clr/accuracy",
-    batch_size_train=200,
-    batch_size_valid=250,
+    batch_size_train=100,
+    batch_size_valid=200,
     lr=1e-1,
-    max_epoch=3,
+    max_epoch=2,
     train_transforms=train_basic_augs(crop_size=(32, 32)),
     valid_transforms=[],
     comment="cifar10_resnet18",
     train_loader_workers=8,
-    valid_loader_workers=10,
-    single_pass_length=1.0,
+    valid_loader_workers=8,
+    single_pass_length=0.01,
     resume_from_checkpoint=None,
     shuffle_train=True,
     output_config=[],

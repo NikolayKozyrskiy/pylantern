@@ -1,7 +1,6 @@
-import contextlib
-from typing import List, TYPE_CHECKING
+from contextlib import contextmanager
+from typing import Any, TYPE_CHECKING
 
-from torch import Tensor
 from matches.shortcuts.dag import ComputationGraph
 
 if TYPE_CHECKING:
@@ -17,6 +16,6 @@ class Pipeline(ComputationGraph):
         self.config = config
         self.batch = None
 
-    @contextlib.contextmanager
-    def batch_scope(self, batch: List[Tensor]):
+    @contextmanager
+    def batch_scope(self, batch: Any):
         raise NotImplementedError()
