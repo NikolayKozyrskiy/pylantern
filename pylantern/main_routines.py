@@ -5,13 +5,18 @@ from matches.loop import Loop
 from matches.accelerators import DDPAccelerator, VanillaAccelerator
 
 from .config import BaseConfig, load_config, dump_config_txt
-from .config_generator import ConfigGenerator, load_config_generator
+from .config_generator import (
+    ConfigGenerator,
+    ConfigGeneratorManager,
+    load_config_generator,
+)
 from .common.utils import (
     copy_config,
     copy_config_generator,
     prepare_comment,
     prepare_logdir,
     DevMode,
+    print_best_metrics_summary,
 )
 
 
@@ -39,6 +44,7 @@ def train_routine(
         DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
         config=config,
     )
+    print_best_metrics_summary(loop)
 
 
 def train_config_generator_routine(
@@ -53,9 +59,10 @@ def train_config_generator_routine(
     copy_config_generator(config_generator_path, root_log_dir)
     config_generator: ConfigGenerator = load_config_generator(config_generator_path)
     copy_config(config_generator.base_config_path, root_log_dir)
+    config_generator_manager = ConfigGeneratorManager(config_generator)
 
-    for idx, config in enumerate(config_generator()):
-        comment = f"{idx:02d}__{config.comment}"
+    for config_idx, config in enumerate(config_generator()):
+        comment = f"{config_idx:02d}__{config.comment}"
         if comment_postfix is not None:
             comment += f"_{comment_postfix}"
         config.comment = comment
@@ -71,12 +78,15 @@ def train_config_generator_routine(
             config.train_callbacks(dev_mode != dev_mode.DISABLED),
             loader_override=dev_mode.value,
         )
-
         loop.launch(
             train_fn,
             DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
             config=config,
         )
+
+        config_generator_manager.update(loop, config_idx)
+
+    config_generator_manager.finalize(root_log_dir)
 
 
 def infer_routine(
@@ -94,6 +104,37 @@ def infer_routine(
         logdir = config_path.parent
     loop = Loop(
         logdir,
+        config.valid_callbacks(),
+    )
+    loop.launch(
+        infer_fn,
+        DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
+        config=config,
+        checkpoint=checkpoint,
+        data_root=data_root,
+        output_name=output_name,
+    )
+
+
+def infer_config_generator_routine(
+    config_generator_path: Path,
+    root_log_dir: Path,
+    infer_fn: Callable,
+    data_root: Optional[Path] = None,
+    output_name: Optional[str] = None,
+    gpus: Optional[str] = None,
+):
+    config_generator: ConfigGenerator = load_config_generator(config_generator_path)
+    if root_log_dir is None:
+        root_log_dir = config_generator_path.parent
+
+    # TODO: implemet search for best config idx
+    best_idx = 0
+
+    config = config_generator.get_config(best_idx)
+
+    loop = Loop(
+        root_log_dir,
         config.valid_callbacks(),
     )
     loop.launch(
