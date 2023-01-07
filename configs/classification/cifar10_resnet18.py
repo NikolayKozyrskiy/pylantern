@@ -1,4 +1,3 @@
-from concurrent.futures import Executor
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -9,7 +8,6 @@ from typing import (
     TypeVar,
 )
 
-from pydantic import BaseModel, Field
 from torch import nn
 from torch.optim import Optimizer, SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -28,6 +26,7 @@ from matches.callbacks import (
     LastModelSaverCallback,
     EnsureWorkdirCleanOrDevMode,
     WandBLoggingSink,
+    BestMetricsReporter,
 )
 
 from pylantern.classification.config import (
@@ -83,6 +82,12 @@ class Config(ClassificationConfig):
                 # EnsureWorkdirCleanOrDevMode(),
                 BestModelSaver(self.monitor, metric_mode="max", logdir_suffix=""),
                 LastModelSaverCallback(),
+                BestMetricsReporter(
+                    metrics_name_mode={
+                        self.monitor: "max",
+                        "valid/clr/cross_entropy": "min",
+                    }
+                ),
             ]
         return callbacks
 
@@ -98,7 +103,7 @@ config = Config(
     loss_aggregation_weigths={"clr/cross_entropy": 1.0},
     metrics=["clr/accuracy"],
     monitor="valid/clr/accuracy",
-    batch_size_train=100,
+    batch_size_train=200,
     batch_size_valid=200,
     lr=1e-1,
     max_epoch=2,
@@ -107,10 +112,10 @@ config = Config(
     comment="cifar10_resnet18",
     train_loader_workers=8,
     valid_loader_workers=8,
-    single_pass_length=0.01,
+    single_pass_length=0.02,
     resume_from_checkpoint=None,
     shuffle_train=True,
     output_config=[],
     preview_image_fns=[],
-    log_vis_fns=[log_to_wandb_gt_pred_labels],
+    log_vis_fns=[],  # [log_to_wandb_gt_pred_labels]
 )

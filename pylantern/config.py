@@ -20,6 +20,7 @@ from matches.callbacks import (
     LastModelSaverCallback,
     EnsureWorkdirCleanOrDevMode,
     WandBLoggingSink,
+    BestMetricsReporter,
 )
 
 from .common.utils import load_pickle, dump_json, dump_txt
@@ -36,6 +37,7 @@ class BaseConfig(BaseModel):
 
     loss_aggregation_weigths: Dict[str, float]
     metrics: List[str]
+    monitor: str
 
     batch_size_train: int = 2
     batch_size_valid: int = 2
@@ -48,7 +50,6 @@ class BaseConfig(BaseModel):
     train_loader_workers: int = 4
     valid_loader_workers: int = 4
     single_pass_length: float = 1.0
-    monitor: str = ""
     resume_from_checkpoint: Optional[Path] = None
     shuffle_train: bool = True
 
@@ -87,6 +88,11 @@ class BaseConfig(BaseModel):
                 EnsureWorkdirCleanOrDevMode(),
                 BestModelSaver(self.monitor, metric_mode="max", logdir_suffix=""),
                 LastModelSaverCallback(),
+                BestMetricsReporter(
+                    metrics_name_mode={
+                        self.monitor: "max",
+                    }
+                ),
             ]
         return callbacks
 

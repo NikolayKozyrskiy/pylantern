@@ -17,10 +17,12 @@ from shutil import copy
 
 import numpy as np
 from ignite.metrics.accumulation import Average
+import pandas as pd
 import torch
 from torch.optim import Optimizer
 from matches.loop import IterationType, Loop
 from matches.utils import unique_logdir
+from matches.shortcuts.callbacks import get_metrics_summary
 
 if TYPE_CHECKING:
     from ..config import BaseConfig
@@ -67,6 +69,13 @@ def copy_config_generator(
         root_log_dir / "config_generator.py",
         follow_symlinks=True,
     )
+
+
+def print_best_metrics_summary(loop: Loop) -> None:
+    summary = get_metrics_summary(loop)
+    if summary is not None:
+        print(f"Metrics summary:\n{pd.DataFrame(summary)}")
+    return None
 
 
 def log_optimizer_lrs(
@@ -149,7 +158,7 @@ def load_pickle(file_path: Union[Path, str]) -> Any:
 
 
 def dump_json(
-    obj: Dict[Any, Any], file_path: Union[Path, str], indent: int = 2
+    obj: Dict[str, Any], file_path: Union[Path, str], indent: int = 2
 ) -> None:
     _file_path = str(file_path)
     if not _file_path.endswith(".json"):
