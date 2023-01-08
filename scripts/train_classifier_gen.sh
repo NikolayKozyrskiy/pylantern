@@ -1,1 +1,0 @@
-python3 -m pylantern.classification train-config-generator configs/classification/cifar10_resnet18_gen.py logs/cifar10_resnet18_gen -g 0 -C "debug"
