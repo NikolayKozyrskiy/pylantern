@@ -37,6 +37,7 @@ from pylantern.classification.pipeline import ClassificationPipeline
 from pylantern.classification.transforms import train_basic_augs
 from pylantern.classification.vis import log_to_wandb_gt_pred_labels
 from pylantern.classification.models.resnet_small import resnet18
+from pylantern.classification.models.vanilla_cnn import VanillaClassifier
 
 
 C = TypeVar("C", bound=Callable)
@@ -49,7 +50,8 @@ class Config(ClassificationConfig):
     #     return model
 
     def model(self) -> nn.Module:
-        return resnet18(num_classes=self.num_classes)
+        # return resnet18(num_classes=self.num_classes)
+        return VanillaClassifier(num_classes=self.num_classes)
 
     def resume(self, loop: Loop, pipeline: "ClassificationPipeline"):
         if self.resume_from_checkpoint is not None:
@@ -104,15 +106,15 @@ config = Config(
     metrics=["clr/accuracy"],
     monitor="valid/clr/accuracy",
     batch_size_train=200,
-    batch_size_valid=200,
+    batch_size_valid=250,
     lr=1e-1,
-    max_epoch=2,
+    max_epoch=10,
     train_transforms=train_basic_augs(crop_size=(32, 32)),
     valid_transforms=[],
     comment="cifar10_resnet18",
     train_loader_workers=8,
     valid_loader_workers=8,
-    single_pass_length=0.02,
+    single_pass_length=0.2,
     resume_from_checkpoint=None,
     shuffle_train=True,
     output_config=[],

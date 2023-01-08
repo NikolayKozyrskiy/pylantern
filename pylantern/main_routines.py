@@ -4,8 +4,9 @@ from typing import Optional, Type, Callable
 from matches.loop import Loop
 from matches.accelerators import DDPAccelerator, VanillaAccelerator
 
-from .config import BaseConfig, load_config, dump_config_txt
+from .config import BaseConfig, load_config, dump_config_dict
 from .config_generator import (
+    GENERATOR_SUMMARY_FILE,
     ConfigGenerator,
     ConfigGeneratorManager,
     load_config_generator,
@@ -17,6 +18,7 @@ from .common.utils import (
     prepare_logdir,
     DevMode,
     print_best_metrics_summary,
+    wrap_tqdm,
 )
 
 
@@ -51,7 +53,6 @@ def train_config_generator_routine(
     config_generator_path: Path,
     root_log_dir: Path,
     train_fn: Callable,
-    comment_postfix: Optional[str] = None,
     gpus: Optional[str] = None,
     dev_mode: DevMode = DevMode.DISABLED,
 ):
@@ -61,17 +62,12 @@ def train_config_generator_routine(
     copy_config(config_generator.base_config_path, root_log_dir)
     config_generator_manager = ConfigGeneratorManager(config_generator)
 
-    for config_idx, config in enumerate(config_generator()):
-        comment = f"{config_idx:02d}__{config.comment}"
-        if comment_postfix is not None:
-            comment += f"_{comment_postfix}"
-        config.comment = comment
-
-        logdir = root_log_dir / comment
+    for config_idx, config in enumerate(
+        wrap_tqdm(config_generator(), "Generator", len(config_generator))
+    ):
+        logdir = root_log_dir / config.comment
         logdir.mkdir(exist_ok=True, parents=True)
-        dump_config_txt(config, logdir / "config")
-        # dump_config_json(config, logdir / "config.json")
-        # dump_pickle(config, logdir / "config.pkl")
+        dump_config_dict(config, logdir / "config.json")
 
         loop = Loop(
             logdir,
@@ -83,7 +79,6 @@ def train_config_generator_routine(
             DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
             config=config,
         )
-
         config_generator_manager.update(loop, config_idx)
 
     config_generator_manager.finalize(root_log_dir)
@@ -118,8 +113,11 @@ def infer_routine(
 
 def infer_config_generator_routine(
     config_generator_path: Path,
-    root_log_dir: Path,
     infer_fn: Callable,
+    root_log_dir: Optional[Path] = None,
+    summary_path: Optional[Path] = None,
+    metric_name: Optional[str] = None,
+    checkpoint: str = "best",
     data_root: Optional[Path] = None,
     output_name: Optional[str] = None,
     gpus: Optional[str] = None,
@@ -127,14 +125,16 @@ def infer_config_generator_routine(
     config_generator: ConfigGenerator = load_config_generator(config_generator_path)
     if root_log_dir is None:
         root_log_dir = config_generator_path.parent
-
-    # TODO: implemet search for best config idx
-    best_idx = 0
-
-    config = config_generator.get_config(best_idx)
+    config_generator_manager = ConfigGeneratorManager(config_generator)
+    if summary_path is None:
+        summary_path = root_log_dir / GENERATOR_SUMMARY_FILE
+    config = config_generator_manager.get_best_config(
+        summary_path, metric_name=metric_name
+    )
+    logdir = root_log_dir / config.comment
 
     loop = Loop(
-        root_log_dir,
+        logdir,
         config.valid_callbacks(),
     )
     loop.launch(

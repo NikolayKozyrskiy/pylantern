@@ -80,7 +80,7 @@ class BaseConfig(BaseModel):
 
     def train_callbacks(self, dev: bool, *args, **kwargs) -> List[Callback]:
         callbacks = [
-            WandBLoggingSink(self.comment, self.dict()),
+            WandBLoggingSink(self.comment, get_config_dict(self)),
             TqdmProgressCallback(),
         ]
         if not dev:
@@ -100,13 +100,12 @@ class BaseConfig(BaseModel):
         return [TqdmProgressCallback()]
 
 
-def dump_config_json(config: BaseConfig, save_path: Union[Path, str]) -> None:
-    dump_json(config.json(indent=2), save_path, indent=2)
-    return None
+def get_config_dict(config: BaseConfig) -> Dict[str, str]:
+    return {k: str(v) for k, v in config.dict().items()}
 
 
-def dump_config_txt(config: BaseConfig, save_path: Union[Path, str]) -> None:
-    dump_txt(config.dict(), save_path)
+def dump_config_dict(config: BaseConfig, save_path: Union[Path, str]) -> None:
+    dump_json(get_config_dict(config), save_path, indent=2)
     return None
 
 
