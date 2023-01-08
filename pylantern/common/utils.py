@@ -10,16 +10,19 @@ from typing import (
     Optional,
     TYPE_CHECKING,
     Type,
+    Generator,
 )
 from pathlib import Path
 import pickle
 from shutil import copy
+import sys
 
 import numpy as np
 from ignite.metrics.accumulation import Average
 import pandas as pd
 import torch
 from torch.optim import Optimizer
+import tqdm.auto as tqdm
 from matches.loop import IterationType, Loop
 from matches.utils import unique_logdir
 from matches.shortcuts.callbacks import get_metrics_summary
@@ -32,6 +35,22 @@ class DevMode(str, Enum):
     DISABLED = "disabled"
     SHORT = "short"
     OVERFIT_BATCH = "overfit-batch"
+
+
+def wrap_tqdm(
+    iterable: Iterable[Any], name: str, length: int, leave: bool = True
+) -> Generator[Any, None, None]:
+    progress_meter = tqdm.tqdm(desc=name, file=sys.stderr, leave=leave)
+    try:
+        for item in iterable:
+            if progress_meter.total != length:
+                progress_meter.reset(total=length)
+            yield item
+            progress_meter.update(1)
+    except GeneratorExit:
+        progress_meter.close()
+        raise
+    progress_meter.close()
 
 
 def get_device() -> str:

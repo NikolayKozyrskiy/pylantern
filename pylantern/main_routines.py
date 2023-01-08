@@ -1,10 +1,8 @@
 from pathlib import Path
 from typing import Optional, Type, Callable
-import sys
 
 from matches.loop import Loop
 from matches.accelerators import DDPAccelerator, VanillaAccelerator
-import tqdm.auto as tqdm
 
 from .config import BaseConfig, load_config, dump_config_dict
 from .config_generator import (
@@ -20,6 +18,7 @@ from .common.utils import (
     prepare_logdir,
     DevMode,
     print_best_metrics_summary,
+    wrap_tqdm,
 )
 
 
@@ -63,12 +62,9 @@ def train_config_generator_routine(
     copy_config(config_generator.base_config_path, root_log_dir)
     config_generator_manager = ConfigGeneratorManager(config_generator)
 
-    generator_tgdm = tqdm.tqdm(desc="Generator", file=sys.stderr)
-    for config_idx, config in enumerate(config_generator()):
-
-        if generator_tgdm.total != len(config_generator):
-            generator_tgdm.reset(total=len(config_generator))
-
+    for config_idx, config in enumerate(
+        wrap_tqdm(config_generator(), "Generator", len(config_generator))
+    ):
         logdir = root_log_dir / config.comment
         logdir.mkdir(exist_ok=True, parents=True)
         dump_config_dict(config, logdir / "config.json")
@@ -83,12 +79,8 @@ def train_config_generator_routine(
             DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
             config=config,
         )
-
         config_generator_manager.update(loop, config_idx)
 
-        generator_tgdm.update(1)
-
-    generator_tgdm.close()
     config_generator_manager.finalize(root_log_dir)
 
 
