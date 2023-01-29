@@ -16,4 +16,5 @@ conda install pandas=1.4.4 -y
 # conda install opencv=4.6.0 -c conda-forge -y
 pip3 install albumentations==1.1.0
 pip3 install torchtyping==0.1.4
+pip3 install timm==0.3.2
 pip3 install ./libs/matches

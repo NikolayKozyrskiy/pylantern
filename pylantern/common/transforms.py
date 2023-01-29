@@ -1,8 +1,11 @@
 from typing import List
 
 import torchvision.transforms as tr
+
 # import albumentations as al
 # from albumentations.pytorch import ToTensorV2
+
+from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 def wrap_transforms(transforms: List) -> tr.Compose:
@@ -16,7 +19,7 @@ def to_tensor() -> List:
 def to_tensor_normalized() -> List:
     return [
         tr.ToTensor(),
-        tr.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        tr.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
     ]
 
 

@@ -7,9 +7,9 @@ from torch.nn import Module
 from matches.shortcuts.dag import graph_node
 
 from ..pipeline import Pipeline
+from .config import ClassificationConfig
 
 if TYPE_CHECKING:
-    from .config import ClassificationConfig
     from .data.dataset import ClassificationDatasetItem
 
 

@@ -1,1 +1,2 @@
-python3 -m pylantern.classification infer logs/cifar10_resnet18__3/230106_1907/config.py -c "best" -o "infer_best"
+# python3 -m pylantern.classification infer logs/cifar10_resnet18__3/230106_1907/config.py -c "best" -o "infer_best"
+python3 -m pylantern.classification infer logs/test_deit_base_patch16_224/config.py -c "none" -o "test_deit"

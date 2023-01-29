@@ -13,23 +13,23 @@ from matches.loop import Loop
 from matches.shortcuts.optimizer import SchedulerScopeType
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
-from ..common.utils import (
+from pylantern.common.utils import (
     enumerate_normalized,
     log_optimizer_lrs,
     consume_metric,
     get_device,
 )
-from ..common.train_utils import predict_dataloader
-from .config import ClassificationConfig
-from .data.dataloader import get_train_loader, get_validation_loader
-from .pipeline import ClassificationPipeline, pipeline_from_config
-from .output_dispatcher import OutputDispatcherClr
+from pylantern.common.train_utils import predict_dataloader
+from .config import QuantClassificationConfig
+from ...data.dataloader import get_train_loader, get_validation_loader
+from .pipeline import QuantClassificationPipeline, pipeline_from_config
+from .output_dispatcher import QuantOutputDispatcherClr
 
 
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
 
 
-def train_fn(loop: Loop, config: ClassificationConfig) -> None:
+def train_fn(loop: Loop, config: QuantClassificationConfig) -> None:
     seed_everything(42)
     setup_cudnn_reproducibility(False, True)
 
@@ -38,11 +38,11 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
     train_loader = loop._loader_override(get_train_loader(config), "train")
     valid_loader = loop._loader_override(get_validation_loader(config), "valid")
 
-    pipeline: ClassificationPipeline = pipeline_from_config(config, device)
+    pipeline: QuantClassificationPipeline = pipeline_from_config(config, device)
 
     optimizer = config.optimizer(pipeline.model)
 
-    out_dispatcher = OutputDispatcherClr(
+    out_dispatcher = QuantOutputDispatcherClr(
         loss_aggregation_weigths=config.loss_aggregation_weigths, metrics=config.metrics
     )
 
@@ -76,8 +76,11 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
                     train_eval_batch = convert_tensor(
                         batch, device="cpu", non_blocking=True
                     )
+
+                pipeline.quantize_weights()
                 loss = handle_batch(batch)
                 loop.backward(loss)
+                pipeline.restore_weights()
                 loop.optimizer_step(optimizer, zero_grad="set_to_none")
                 if scheduler is not None:
                     scheduler.step(SchedulerScopeType.BATCH, cur_iter)
@@ -90,8 +93,10 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
                             train_eval_batch, device=device, non_blocking=True
                         )
                     ):
+                        pipeline.quantize_weights()
                         for fn in config.log_vis_fns:
                             fn(loop, pipeline, "train")
+                        pipeline.restore_weights()
 
             if scheduler is not None:
                 scheduler.step(SchedulerScopeType.EPOCH, epoch)
@@ -100,6 +105,7 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
             consume_metric(loop, metrics_d, prefix="train")
 
             # Valid part
+            pipeline.quantize_weights()
             for i, batch in enumerate(loop.iterate_dataloader(valid_loader)):
                 handle_batch(batch)
                 if i == 0:
@@ -108,7 +114,9 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
                             fn(loop, pipeline, "valid")
             consume_metric(loop, losses_d, prefix="valid")
             consume_metric(loop, metrics_d, prefix="valid")
+            pipeline.restore_weights()
 
+        pipeline.quantize_weights()
         predict_dataloader(
             loop,
             pipeline,
@@ -117,13 +125,14 @@ def train_fn(loop: Loop, config: ClassificationConfig) -> None:
             loop.logdir / "valid_infer",
             verbose=True,
         )
+        pipeline.restore_weights()
 
     loop.run(_train)
 
 
 def infer_fn(
     loop: Loop,
-    config: ClassificationConfig,
+    config: QuantClassificationConfig,
     checkpoint: str = "best",
     data_root: Optional[Path] = None,
     output_name: Optional[str] = None,
@@ -134,9 +143,9 @@ def infer_fn(
     output_name = checkpoint if output_name is None else output_name
 
     loader = get_validation_loader(config)
-    pipeline: ClassificationPipeline = pipeline_from_config(config, device)
+    pipeline: QuantClassificationPipeline = pipeline_from_config(config, device)
 
-    out_dispatcher = OutputDispatcherClr(
+    out_dispatcher = QuantOutputDispatcherClr(
         loss_aggregation_weigths=config.loss_aggregation_weigths, metrics=config.metrics
     )
 
@@ -147,6 +156,7 @@ def infer_fn(
         )
 
     def _infer(loop: Loop):
+        pipeline.quantize_weights()
         predict_dataloader(
             loop,
             pipeline,
@@ -155,6 +165,7 @@ def infer_fn(
             loop.logdir / output_name,
             verbose=True,
         )
+        pipeline.restore_weights()
 
     loop.run(_infer)
     return None

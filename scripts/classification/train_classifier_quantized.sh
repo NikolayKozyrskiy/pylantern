@@ -1,0 +1,2 @@
+python3 -m pylantern.classification train-quantization configs/classification/cifar10_resnet18_quant.py -g 0 -C "quant_cifar10_qresnet18"
+# python3 -m pylantern.classification train-quantization configs/classification/imagenet_qresnet18.py -g 0 -C "quant_imagenet_resnet18"
