@@ -171,10 +171,13 @@ class GeneratorSummary:
         finally:
             return value
 
-    def print(self) -> None:
+    def __str__(self) -> str:
         if self.summary_df is None:
-            self.summary_df = pd.DataFrame(self.summary)
-        print(self.summary_df)
+            try:
+                self.summary_df = pd.DataFrame(self.summary)
+            except:
+                return str(self.summary)
+        return str(self.summary_df)
 
 
 class ConfigGeneratorManager:
@@ -195,7 +198,7 @@ class ConfigGeneratorManager:
         self.summary.make_summary(self.metric_best_entities_dict)
         if logdir is not None:
             self.summary.save_summary(logdir)
-        self.summary.print()
+        print(self.summary)
 
     def get_best_config(
         self, summary_path: PATH_STR, metric_name: Optional[str] = None
