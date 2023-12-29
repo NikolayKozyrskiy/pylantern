@@ -3,11 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-_data
+.doh/
+dohrc.toml
+dohrc.local.toml
+
+_d/
 _data/
-tmp
 tmp/
-logs
 logs/
 
 [Bb]in
