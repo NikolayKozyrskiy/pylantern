@@ -1,44 +1,35 @@
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, TypeVar
+
+from matches.callbacks import (
+    BestMetricsReporter,
+    BestModelSaver,
+    Callback,
+    EnsureWorkdirCleanOrDevMode,
+    LastModelSaverCallback,
+    TqdmProgressCallback,
+    WandBLoggingSink,
 )
-
-from torch import nn
-from torch.optim import Optimizer, SGD
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from torchvision import models
-
 from matches.loop import Loop
 from matches.shortcuts.optimizer import (
     LRSchedulerProto,
     LRSchedulerWrapper,
     SchedulerScopeType,
 )
-from matches.callbacks import (
-    Callback,
-    BestModelSaver,
-    TqdmProgressCallback,
-    LastModelSaverCallback,
-    EnsureWorkdirCleanOrDevMode,
-    WandBLoggingSink,
-    BestMetricsReporter,
-)
+from torch import nn
+from torch.optim import SGD, Optimizer
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torchvision import models
 
-from pylantern.classification.config import (
+from pylantern.model_zoo.models import resnet18_small
+from pylantern.tasks.classification.config import (
     ClassificationConfig,
     ClassificationDatasetName,
 )
-from pylantern.classification.pipeline import ClassificationPipeline
-from pylantern.classification.transforms import train_basic_augs
-from pylantern.classification.vis import log_to_wandb_gt_pred_labels
-from pylantern.classification.models.resnet_small import resnet18
-from pylantern.classification.models.vanilla_cnn import VanillaClassifier
-
+from pylantern.tasks.classification.models.vanilla_cnn import VanillaClassifier
+from pylantern.tasks.classification.pipeline import ClassificationPipeline
+from pylantern.tasks.classification.transforms import train_basic_augs
+from pylantern.tasks.classification.vis import log_to_wandb_gt_pred_labels
 
 C = TypeVar("C", bound=Callable)
 
@@ -98,7 +89,7 @@ class Config(ClassificationConfig):
 
 
 config = Config(
-    data_root="_data",
+    data_root="_d",
     num_classes=10,
     dataset_name=ClassificationDatasetName.CIFAR10,
     image_hw=(32, 32),

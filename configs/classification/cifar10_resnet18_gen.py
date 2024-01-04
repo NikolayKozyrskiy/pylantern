@@ -1,8 +1,7 @@
 from pathlib import Path
 
 from pylantern.config_generator import ConfigGenerator
-from pylantern.classification.config import ClassificationConfig
-
+from pylantern.tasks.classification.config import ClassificationConfig
 
 config_generator = ConfigGenerator(
     base_config_path=Path("configs/classification/cifar10_resnet18.py"),

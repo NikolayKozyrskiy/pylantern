@@ -1,21 +1,24 @@
 from collections import defaultdict
 from itertools import product
+from math import ceil, log10
 from pathlib import Path
-from typing import Any, Callable, Dict, Generator, Union, List, Type, Optional
-from math import log10, ceil
+from typing import Any, Callable, Dict, Generator, List, Optional, Type, Union
 
+import pandas as pd
+from matches.callbacks import BestMetricsReporter, BestModelSaver
 from matches.loop import Loop
-from matches.callbacks import BestModelSaver, BestMetricsReporter
 from matches.shortcuts.callbacks import (
-    get_callback,
     get_best_model_metric_setup,
+    get_callback,
     get_metric_best_setups,
 )
 from matches.shortcuts.metrics import MetricBestSetup
 from matches.utils import dump_json
-import pandas as pd
 
 from .config import BaseConfig, load_config
+
+# Look here for inspiration:
+#   https://github.com/NVlabs/stylegan3/blob/main/torch_utils/persistence.py
 
 PATH_STR = Union[Path, str]
 NUM_STR = Union[str, int, float]

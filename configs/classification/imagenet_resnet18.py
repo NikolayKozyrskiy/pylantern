@@ -1,45 +1,35 @@
 from concurrent.futures import Executor
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, TypeVar
 
-from pydantic import BaseModel, Field
-from torch import nn
-from torch.optim import Optimizer, SGD, Adam
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from torchvision import models
 import torchvision.transforms as tr
-
+from matches.callbacks import (
+    BestModelSaver,
+    Callback,
+    EnsureWorkdirCleanOrDevMode,
+    LastModelSaverCallback,
+    TqdmProgressCallback,
+    WandBLoggingSink,
+)
 from matches.loop import Loop
 from matches.shortcuts.optimizer import (
     LRSchedulerProto,
     LRSchedulerWrapper,
     SchedulerScopeType,
 )
-from matches.callbacks import (
-    Callback,
-    BestModelSaver,
-    TqdmProgressCallback,
-    LastModelSaverCallback,
-    EnsureWorkdirCleanOrDevMode,
-    WandBLoggingSink,
-)
+from torch import nn
+from torch.optim import SGD, Adam, Optimizer
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torchvision import models
 
-from pylantern.classification.config import (
+from pylantern.model_zoo.models import resnet18_small
+from pylantern.tasks.classification.config import (
     ClassificationConfig,
     ClassificationDatasetName,
 )
-from pylantern.classification.pipeline import ClassificationPipeline
-from pylantern.classification.transforms import train_basic_augs
-from pylantern.classification.vis import log_to_wandb_gt_pred_labels
-from pylantern.classification.models.resnet_small import resnet18
-
+from pylantern.tasks.classification.pipeline import ClassificationPipeline
+from pylantern.tasks.classification.transforms import train_basic_augs
+from pylantern.tasks.classification.vis import log_to_wandb_gt_pred_labels
 
 C = TypeVar("C", bound=Callable)
 
@@ -87,7 +77,7 @@ class Config(ClassificationConfig):
 
 
 config = Config(
-    data_root="_data/ILSVRC-12",
+    data_root="_d/ILSVRC-12",
     num_classes=1000,
     dataset_name=ClassificationDatasetName.IMAGENET,
     image_hw=(256, 256),

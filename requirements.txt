@@ -12,9 +12,10 @@ notebook
 matplotlib
 albumentations==1.1.0
 kornia==0.7.1
-torchtyping==0.1.4
 pandas==1.4.4
 imageio==2.19.3
+imageio-ffmpeg
 opencv-python
 scikit-image
 scipy
+flopco-pytorch

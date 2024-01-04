@@ -3,25 +3,25 @@ from __future__ import annotations
 import functools
 from concurrent.futures import Executor
 from pathlib import Path
-from typing import Callable, TypeVar, NamedTuple, List
+from typing import Callable, List, NamedTuple, TypeVar
 
 import imageio
 import numpy as np
 import torch
-from typing_extensions import Concatenate, ParamSpec
-from matches.loop import Loop
 import wandb
+from matches.loop import Loop
+from typing_extensions import Concatenate, ParamSpec
 
+from ..pipeline import BasePipeline
 from .utils import tensor_to_image
-from ..pipeline import Pipeline
 
 Args = ParamSpec("Args")
 R = TypeVar("R")
 
 
 def delayed(
-    f: Callable[Concatenate[Pipeline, Executor, Path, Args], R]
-) -> Callable[[Args], Callable[[Pipeline, Executor, Path], R]]:
+    f: Callable[Concatenate[BasePipeline, Executor, Path, Args], R]
+) -> Callable[[Args], Callable[[BasePipeline, Executor, Path], R]]:
     @functools.wraps(f)
     def partial(*args: Args.args, **kwargs: Args.kwargs):
         return functools.partial(f, *args, **kwargs)
@@ -30,7 +30,7 @@ def delayed(
     return partial
 
 
-def create_preview_images(pipeline: Pipeline) -> torch.Tensor:
+def create_preview_images(pipeline: BasePipeline) -> torch.Tensor:
     images = []
     for image_fn in pipeline.config.preview_image_fns:
         images.append(image_fn(pipeline).cpu())
@@ -40,7 +40,7 @@ def create_preview_images(pipeline: Pipeline) -> torch.Tensor:
 
 @delayed
 def save_previews(
-    pipeline: Pipeline,
+    pipeline: BasePipeline,
     io_pool: Executor,
     root: Path,
     name_postfix: str = "",
@@ -54,7 +54,7 @@ def save_previews(
         io_pool.submit(imageio.imwrite, images_dir / f"{name}_{name_postfix}.jpg", im_i)
 
 
-def log_to_wandb_preview_images(loop: Loop, pipeline: Pipeline, prefix: str):
+def log_to_wandb_preview_images(loop: Loop, pipeline: BasePipeline, prefix: str):
     with loop.mode(mode="valid"):
         images = create_preview_images(pipeline)
 

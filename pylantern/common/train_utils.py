@@ -1,20 +1,20 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Optional, List, Tuple
+from typing import Any, List, Optional, Tuple
 
-from torch.utils.data import DataLoader
 import pandas as pd
 from matches.loop import Loop
+from torch.utils.data import DataLoader
 
-from ..pipeline import Pipeline
-from ..output_dispatcher import OutputDispatcher, filter_and_uncollate
+from ..output_dispatcher import BaseOutputDispatcher, filter_and_uncollate
+from ..pipeline import BasePipeline
 
 
 def predict_dataloader(
     loop: Loop,
-    pipeline: Pipeline,
+    pipeline: BasePipeline,
     dataloader: DataLoader,
-    out_dispatcher: OutputDispatcher,
+    out_dispatcher: BaseOutputDispatcher,
     save_dir: Optional[Path] = None,
     verbose: bool = True,
 ) -> Tuple[List[Any], List[Any]]:
@@ -27,7 +27,6 @@ def predict_dataloader(
     with ThreadPoolExecutor(max_workers=4) as pool:
         for batch in loop.iterate_dataloader(dataloader):
             with pipeline.batch_scope(batch):
-
                 for f in pipeline.config.output_config:
                     f(
                         pipeline,

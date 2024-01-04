@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from matches.shortcuts.dag import ComputationGraph
 
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from .config import BaseConfig
 
 
-class Pipeline(ComputationGraph):
+class BasePipeline(ComputationGraph):
     def __init__(
         self,
         config: "BaseConfig",

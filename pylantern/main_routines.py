@@ -1,24 +1,24 @@
 from pathlib import Path
-from typing import Optional, Type, Callable
+from typing import Callable, Optional, Type
 
-from matches.loop import Loop
 from matches.accelerators import DDPAccelerator, VanillaAccelerator
+from matches.loop import Loop
 
-from .config import BaseConfig, load_config, dump_config_dict
+from .common.utils import (
+    DevMode,
+    copy_config,
+    copy_config_generator,
+    prepare_comment,
+    prepare_logdir,
+    print_best_metrics_summary,
+    wrap_tqdm,
+)
+from .config import BaseConfig, dump_config_dict, load_config
 from .config_generator import (
     GENERATOR_SUMMARY_FILE,
     ConfigGenerator,
     ConfigGeneratorManager,
     load_config_generator,
-)
-from .common.utils import (
-    copy_config,
-    copy_config_generator,
-    prepare_comment,
-    prepare_logdir,
-    DevMode,
-    print_best_metrics_summary,
-    wrap_tqdm,
 )
 
 

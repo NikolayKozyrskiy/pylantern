@@ -1,11 +1,8 @@
 import torch
 from torch import Tensor
-from torchtyping import TensorType
 
 
-def correct_labels(
-    pred: TensorType["batch_size", "num_classes"], gt: TensorType["batch_size"]
-) -> TensorType["batch_size"]:
+def correct_labels(pred: Tensor, gt: Tensor) -> Tensor:
     return pred.max(1)[1].eq(gt).float()
 
 

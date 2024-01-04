@@ -2,42 +2,49 @@ from concurrent.futures import Executor
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, TypeVar, Union
 
-from pydantic import BaseModel, Field
-from torch.nn import Module
-from torch.optim import Optimizer, SGD
-from torch.optim.lr_scheduler import CosineAnnealingLR
-
+from matches.callbacks import (
+    BestMetricsReporter,
+    BestModelSaver,
+    Callback,
+    EnsureWorkdirCleanOrDevMode,
+    LastModelSaverCallback,
+    TqdmProgressCallback,
+    WandBLoggingSink,
+)
 from matches.loop import Loop
 from matches.shortcuts.optimizer import (
     LRSchedulerProto,
     LRSchedulerWrapper,
     SchedulerScopeType,
 )
-from matches.callbacks import (
-    Callback,
-    BestModelSaver,
-    TqdmProgressCallback,
-    LastModelSaverCallback,
-    EnsureWorkdirCleanOrDevMode,
-    WandBLoggingSink,
-    BestMetricsReporter,
-)
+from pydantic import BaseModel as PydanticBaseModel
+from torch.nn import Module
+from torch.optim import SGD, Optimizer
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from .common.utils import load_pickle, dump_json, dump_txt
+from .common.utils import dump_json, load_pickle
+from .output_dispatcher import CriterionAggregation
 
 if TYPE_CHECKING:
-    from .pipeline import Pipeline
+    from .pipeline import BasePipeline
 
 
 C = TypeVar("C", bound=Callable)
 
 
-class BaseConfig(BaseModel):
-    data_root: str
+class BaseModel(PydanticBaseModel):
+    class Config:
+        arbitrary_types_allowed = True
 
-    loss_aggregation_weigths: Dict[str, float]
-    metrics: List[str]
-    monitor: str
+
+class BaseConfig(BaseModel):
+    comment: Optional[str] = "default_comment"
+    data_root: Path = Path("_d")
+
+    criterion_aggregation: CriterionAggregation = CriterionAggregation({})
+    normalize_losses: bool = False
+    metrics: List[str] = [""]
+    monitor: str = ""
 
     batch_size_train: int = 2
     batch_size_valid: int = 2
@@ -46,14 +53,13 @@ class BaseConfig(BaseModel):
     train_transforms: list[Callable] = []
     valid_transforms: list[Callable] = []
 
-    comment: Optional[str] = "default_comment"
     train_loader_workers: int = 4
     valid_loader_workers: int = 4
     single_pass_length: float = 1.0
     resume_from_checkpoint: Optional[Path] = None
     shuffle_train: bool = True
 
-    output_config: list[Callable[["Pipeline", Executor, Path], None]] = []
+    output_config: list[Callable[["BasePipeline", Executor, Path], None]] = []
     preview_image_fns: List[Callable] = []
     log_vis_fns: List[Callable] = []
 
@@ -66,7 +72,7 @@ class BaseConfig(BaseModel):
             scope_type=SchedulerScopeType.BATCH,
         )
 
-    def resume(self, loop: Loop, pipeline: "Pipeline") -> None:
+    def resume(self, loop: Loop, pipeline: "BasePipeline") -> None:
         if self.resume_from_checkpoint is not None:
             loop.state_manager.read_state(
                 self.resume_from_checkpoint,
@@ -75,7 +81,7 @@ class BaseConfig(BaseModel):
                 ],
             )
 
-    def postprocess(self, loop: Loop, pipeline: "Pipeline") -> None:
+    def postprocess(self, loop: Loop, pipeline: "BasePipeline") -> None:
         pass
 
     def train_callbacks(self, dev: bool, *args, **kwargs) -> List[Callback]:
@@ -129,9 +135,4 @@ def _load_config_from_py(config_path: Path):
 
 
 if __name__ == "__main__":
-    conf = BaseConfig(
-        data_root="_a", loss_aggregation_weigths={"l": 1.0}, metrics=["m"]
-    )
-    print(conf.json(indent=2))
-    print("=" * 100)
-    print(conf.dict())
+    pass
