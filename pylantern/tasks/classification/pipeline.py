@@ -1,4 +1,4 @@
-import contextlib
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, List, NamedTuple, Optional
 
 import torch
@@ -28,7 +28,7 @@ class ClassificationPipeline(BasePipeline):
         self.classifier_model = classifier_model
         self.num_classes = config.num_classes
 
-    @contextlib.contextmanager
+    @contextmanager
     def batch_scope(
         self, batch: "ClassificationDatasetItem"
     ):  # TODO: refactor batch here

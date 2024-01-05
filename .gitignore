@@ -11,6 +11,8 @@ _d/
 _data/
 tmp/
 logs/
+local_configs/
+local_scripts/
 
 [Bb]in
 [Ii]nclude

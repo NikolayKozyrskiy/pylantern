@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 
 import torch
 import torch.nn.functional as F
+from matches.loop import Loop
 from torch import Tensor
 
 from pylantern.common.metrics import correct_labels
@@ -28,12 +29,16 @@ class OutputDispatcherClr(BaseOutputDispatcher):
             **kwargs,
         )
 
-    def clr__cross_entropy(self, pipeline: "ClassificationPipeline") -> Tensor:
+    def clr__cross_entropy(
+        self, pipeline: "ClassificationPipeline", loop: "Loop", *args, **kwargs
+    ) -> Tensor:
         pred = pipeline.predict_logits()
         gt = pipeline.gt_labels()
-        return F.cross_entropy(pred, gt, reduction="none")
+        return F.cross_entropy(pred, gt, reduction="mean")
 
-    def clr__accuracy(self, pipeline: "ClassificationPipeline") -> Tensor:
+    def clr__accuracy(
+        self, pipeline: "ClassificationPipeline", loop: "Loop", *args, **kwargs
+    ) -> Tensor:
         pred = pipeline.predict_logits()
         gt = pipeline.gt_labels()
-        return correct_labels(pred, gt)
+        return correct_labels(pred, gt).mean()

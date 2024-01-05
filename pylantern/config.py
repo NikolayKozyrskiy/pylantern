@@ -12,11 +12,7 @@ from matches.callbacks import (
     WandBLoggingSink,
 )
 from matches.loop import Loop
-from matches.shortcuts.optimizer import (
-    LRSchedulerProto,
-    LRSchedulerWrapper,
-    SchedulerScopeType,
-)
+from matches.shortcuts.optimizer import LRSchedulerWrapper, SchedulerScopeType
 from pydantic import BaseModel as PydanticBaseModel
 from torch.nn import Module
 from torch.optim import SGD, Optimizer
@@ -39,7 +35,7 @@ class BaseModel(PydanticBaseModel):
 
 class BaseConfig(BaseModel):
     comment: Optional[str] = "default_comment"
-    data_root: Path = Path("_d")
+    root_path: Path = Path("_d")
 
     criterion_aggregation: CriterionAggregation = CriterionAggregation({})
     normalize_losses: bool = False
@@ -56,7 +52,7 @@ class BaseConfig(BaseModel):
     train_loader_workers: int = 4
     valid_loader_workers: int = 4
     single_pass_length: float = 1.0
-    resume_from_checkpoint: Optional[Path] = None
+    checkpoint_path: Optional[Path] = None
     shuffle_train: bool = True
 
     output_config: list[Callable[["BasePipeline", Executor, Path], None]] = []
@@ -66,16 +62,16 @@ class BaseConfig(BaseModel):
     def optimizer(self, model: Module) -> Optimizer:
         return SGD(model.parameters(), lr=self.lr, momentum=0.9, weight_decay=5e-4)
 
-    def scheduler(self, optimizer: Optimizer) -> Optional[LRSchedulerProto]:
+    def scheduler(self, optimizer: Optimizer) -> LRSchedulerWrapper:
         return LRSchedulerWrapper(
             CosineAnnealingLR(optimizer, T_max=self.max_epoch),
             scope_type=SchedulerScopeType.BATCH,
         )
 
     def resume(self, loop: Loop, pipeline: "BasePipeline") -> None:
-        if self.resume_from_checkpoint is not None:
+        if self.checkpoint_path is not None:
             loop.state_manager.read_state(
-                self.resume_from_checkpoint,
+                self.checkpoint_path,
                 skip_keys=[
                     "scheduler",
                 ],

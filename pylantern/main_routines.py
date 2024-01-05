@@ -10,7 +10,6 @@ from .common.utils import (
     copy_config_generator,
     prepare_comment,
     prepare_logdir,
-    print_best_metrics_summary,
     wrap_tqdm,
 )
 from .config import BaseConfig, dump_config_dict, load_config
@@ -43,10 +42,10 @@ def train_routine(
     )
     loop.launch(
         train_fn,
-        DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
-        config=config,
+        DDPAccelerator(gpus),
+        config_path=config_path,
+        config_cls=config_cls,
     )
-    print_best_metrics_summary(loop)
 
 
 def train_config_generator_routine(
@@ -58,7 +57,7 @@ def train_config_generator_routine(
 ):
     root_log_dir.mkdir(exist_ok=True, parents=True)
     copy_config_generator(config_generator_path, root_log_dir)
-    config_generator: ConfigGenerator = load_config_generator(config_generator_path)
+    config_generator: "ConfigGenerator" = load_config_generator(config_generator_path)
     copy_config(config_generator.base_config_path, root_log_dir)
     config_generator_manager = ConfigGeneratorManager(config_generator)
 
@@ -76,7 +75,7 @@ def train_config_generator_routine(
         )
         loop.launch(
             train_fn,
-            DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
+            DDPAccelerator(gpus),
             config=config,
         )
         config_generator_manager.update(loop, config_idx)
@@ -103,7 +102,7 @@ def infer_routine(
     )
     loop.launch(
         infer_fn,
-        DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
+        DDPAccelerator(gpus),
         config=config,
         checkpoint=checkpoint,
         data_root=data_root,
@@ -139,7 +138,7 @@ def infer_config_generator_routine(
     )
     loop.launch(
         infer_fn,
-        DDPAccelerator(gpus) if gpus is not None else VanillaAccelerator("cpu"),
+        DDPAccelerator(gpus),
         config=config,
         checkpoint=checkpoint,
         data_root=data_root,

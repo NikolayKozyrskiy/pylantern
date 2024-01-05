@@ -29,9 +29,9 @@ class ClassificationConfig(BaseConfig):
         return model
 
     def resume(self, loop: Loop, pipeline: "ClassificationPipeline"):
-        if self.resume_from_checkpoint is not None:
+        if self.checkpoint_path is not None:
             loop.state_manager.read_state(
-                self.resume_from_checkpoint,
+                self.checkpoint_path,
                 skip_keys=[
                     "scheduler",
                 ],

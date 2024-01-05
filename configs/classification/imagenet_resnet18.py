@@ -39,9 +39,9 @@ class Config(ClassificationConfig):
         return models.resnet18(pretrained=True, progress=True)
 
     def resume(self, loop: Loop, pipeline: "ClassificationPipeline"):
-        if self.resume_from_checkpoint is not None:
+        if self.checkpoint_path is not None:
             loop.state_manager.read_state(
-                self.resume_from_checkpoint,
+                self.checkpoint_path,
                 skip_keys=[
                     "scheduler",
                 ],
@@ -77,7 +77,7 @@ class Config(ClassificationConfig):
 
 
 config = Config(
-    data_root="_d/ILSVRC-12",
+    root_path="_d/ILSVRC-12",
     num_classes=1000,
     dataset_name=ClassificationDatasetName.IMAGENET,
     image_hw=(256, 256),
@@ -99,7 +99,7 @@ config = Config(
     train_loader_workers=8,
     valid_loader_workers=10,
     single_pass_length=1.0,
-    resume_from_checkpoint=None,
+    checkpoint_path=None,
     shuffle_train=True,
     output_config=[],
     preview_image_fns=[],

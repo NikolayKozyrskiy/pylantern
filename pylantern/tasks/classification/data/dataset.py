@@ -1,16 +1,16 @@
-from typing import NamedTuple, Optional, Callable, List, Dict, Union, Tuple, Any
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import torch
+from PIL.Image import Image
 from torch.utils.data import Dataset
 from torchvision import datasets
-from PIL.Image import Image
 
 from pylantern.common.transforms import wrap_transforms
 
-from ..config import ClassificationDatasetName, ClassificationConfig
+from ..config import ClassificationConfig, ClassificationDatasetName
 from .label_name_map import LABEL_NAME_MAP
 
 
@@ -61,24 +61,24 @@ class ClassificationDatasetW(Dataset):
 
 
 def get_train_dataset(config: ClassificationConfig) -> ClassificationDatasetW:
-    os.makedirs(config.data_root, exist_ok=True)
+    os.makedirs(config.root_path, exist_ok=True)
     if config.dataset_name == ClassificationDatasetName.CIFAR10:
         dataset = datasets.CIFAR10(
-            root=config.data_root,
+            root=config.root_path,
             train=True,
             download=True,
             transform=wrap_transforms(config.train_transforms),
         )
     elif config.dataset_name == ClassificationDatasetName.CIFAR100:
         dataset = datasets.CIFAR100(
-            root=config.data_root,
+            root=config.root_path,
             train=True,
             download=True,
             transform=wrap_transforms(config.train_transforms),
         )
     elif config.dataset_name == ClassificationDatasetName.IMAGENET:
         dataset = datasets.ImageFolder(
-            root=f"{config.data_root}/train",
+            root=f"{config.root_path}/train",
             transform=wrap_transforms(config.train_transforms),
         )
     else:
@@ -91,24 +91,24 @@ def get_train_dataset(config: ClassificationConfig) -> ClassificationDatasetW:
 
 
 def get_validation_dataset(config: ClassificationConfig) -> ClassificationDatasetW:
-    os.makedirs(config.data_root, exist_ok=True)
+    os.makedirs(config.root_path, exist_ok=True)
     if config.dataset_name == ClassificationDatasetName.CIFAR10:
         dataset = datasets.CIFAR10(
-            root=config.data_root,
+            root=config.root_path,
             train=False,
             download=True,
             transform=wrap_transforms(config.valid_transforms),
         )
     elif config.dataset_name == ClassificationDatasetName.CIFAR100:
         dataset = datasets.CIFAR100(
-            root=config.data_root,
+            root=config.root_path,
             train=False,
             download=True,
             transform=wrap_transforms(config.valid_transforms),
         )
     elif config.dataset_name == ClassificationDatasetName.IMAGENET:
         dataset = datasets.ImageFolder(
-            root=f"{config.data_root}/val",
+            root=f"{config.root_path}/val",
             transform=wrap_transforms(config.valid_transforms),
         )
     else:

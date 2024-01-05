@@ -8,6 +8,9 @@ import numpy as np
 
 from ..utils import mkdir
 
+# Look here for inspiration:
+# https://github.com/xinntao/Real-ESRGAN/blob/master/inference_realesrgan_video.py
+
 FFMPEG_DIGITS_NUM = 6
 FPS_LIST = np.array([24.0, 30.0, 60.0, 120.0, 240.0])
 

@@ -4,17 +4,20 @@ from typing import Any, List, Optional, Tuple
 
 import pandas as pd
 from matches.loop import Loop
+from matches.utils import single_process_only
 from torch.utils.data import DataLoader
 
-from ..output_dispatcher import BaseOutputDispatcher, filter_and_uncollate
-from ..pipeline import BasePipeline
+from pylantern.output_dispatcher import BaseOutputDispatcher, filter_and_uncollate
+from pylantern.pipeline import BasePipeline
 
 
+@single_process_only()
 def predict_dataloader(
     loop: Loop,
     pipeline: BasePipeline,
     dataloader: DataLoader,
-    out_dispatcher: BaseOutputDispatcher,
+    output_dispatcher: BaseOutputDispatcher,
+    group_losses: Optional[List[str]] = None,
     save_dir: Optional[Path] = None,
     verbose: bool = True,
 ) -> Tuple[List[Any], List[Any]]:
@@ -33,16 +36,28 @@ def predict_dataloader(
                         pool,
                         save_dir,
                     )
+                losses_computed = {}
+                if group_losses is not None:
+                    for group in group_losses:
+                        losses_computed.update(
+                            output_dispatcher.compute_losses_group(
+                                group, pipeline, loop
+                            ).computed_values
+                        )
+                else:
+                    losses_computed = output_dispatcher.compute_losses(
+                        pipeline, loop
+                    ).computed_values
 
                 losses.extend(
                     filter_and_uncollate(
-                        out_dispatcher.compute_losses(pipeline).computed_values,
+                        losses_computed,
                         pipeline,
                     )
                 )
                 metrics.extend(
                     filter_and_uncollate(
-                        out_dispatcher.compute_metrics(pipeline).computed_values,
+                        output_dispatcher.compute_metrics(pipeline, loop).computed_values,
                         pipeline,
                     )
                 )
