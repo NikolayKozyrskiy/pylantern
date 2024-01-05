@@ -21,7 +21,7 @@ from pylantern.common.utils.module import remove_module_from_state_dict
 from pylantern.config import load_config
 
 from .config import ClassificationConfig
-from .data.dataloader import get_train_loader, get_validation_loader
+from .data.dataloaders import get_train_loader, get_validation_loader
 from .output_dispatcher import OutputDispatcherClr
 from .pipeline import ClassificationPipeline, pipeline_from_config
 

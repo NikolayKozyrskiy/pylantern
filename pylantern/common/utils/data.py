@@ -1,30 +1,12 @@
 import json
-import os
 import random
 from collections import defaultdict
-from enum import Enum
 from pathlib import Path
 from typing import List, Optional
 
-import numpy as np
 from tqdm import tqdm
 
 from .utils import mkdir
-
-ARCFACE_DST_KPS = np.array(
-    [
-        [38.2946, 51.6963],
-        [73.5318, 51.5014],
-        [56.0252, 71.7366],
-        [41.5493, 92.3655],
-        [70.7299, 92.2041],
-    ],
-    dtype=np.float64,
-)
-
-
-class DatasetType(str, Enum):
-    IMAGE_FOLDER = "image_folder"
 
 
 def make_symlinks(

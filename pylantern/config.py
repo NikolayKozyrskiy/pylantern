@@ -42,8 +42,8 @@ class BaseConfig(BaseModel):
     metrics: List[str] = [""]
     monitor: str = ""
 
-    batch_size_train: int = 2
-    batch_size_valid: int = 2
+    train_batch_size: int = 2
+    valid_batch_size: int = 2
     lr: float = 1e-2
     max_epoch: int = 100
     train_transforms: list[Callable] = []
@@ -76,6 +76,9 @@ class BaseConfig(BaseModel):
                     "scheduler",
                 ],
             )
+
+    def preprocess(self, loop: Loop, pipeline: "BasePipeline") -> None:
+        pass
 
     def postprocess(self, loop: Loop, pipeline: "BasePipeline") -> None:
         pass

@@ -26,7 +26,7 @@ from pylantern.tasks.classification.config import (
 from pylantern.tasks.classification.models.vanilla_cnn import VanillaClassifier
 from pylantern.tasks.classification.pipeline import ClassificationPipeline
 from pylantern.tasks.classification.transforms import train_basic_augs
-from pylantern.tasks.classification.vis import log_to_wandb_gt_pred_labels
+from pylantern.tasks.classification.visualization import log_to_wandb_gt_pred_labels
 
 C = TypeVar("C", bound=Callable)
 
@@ -90,8 +90,8 @@ config = Config(
     criterion_aggregation=CriterionAggregation(default={"clr/cross_entropy": 1.0}),
     metrics=["clr/accuracy"],
     monitor="valid/clr/accuracy",
-    batch_size_train=200,
-    batch_size_valid=250,
+    train_batch_size=200,
+    valid_batch_size=250,
     shuffle_train=True,
     lr=1e-1,
     max_epoch=10,
