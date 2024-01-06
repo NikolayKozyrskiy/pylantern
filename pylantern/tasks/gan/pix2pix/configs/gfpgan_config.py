@@ -8,7 +8,7 @@ from pylantern.model_zoo.gfpgan import (
     stylegan2_discriminator,
 )
 
-from ..config import GanPix2PixConfig
+from .config import GanPix2PixConfig
 
 
 class GFPGANConfig(GanPix2PixConfig):

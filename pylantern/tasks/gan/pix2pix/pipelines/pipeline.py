@@ -22,7 +22,7 @@ from pylantern.common.utils.tensor import denormalize_tensor, normalize_tensor
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import FacialComponentDiscriminator
 
-    from .config import BasePix2PixConfig, GanPix2PixConfig
+    from ..configs import BasePix2PixConfig, GanPix2PixConfig
 
 
 class BasePix2PixPipeline(ComputationGraph):
@@ -452,7 +452,7 @@ class BasePix2PixPipeline(ComputationGraph):
         )
 
 
-class GanPipeline(BasePix2PixPipeline):
+class GanPix2PixPipeline(BasePix2PixPipeline):
     def __init__(
         self,
         config: "GanPix2PixConfig",

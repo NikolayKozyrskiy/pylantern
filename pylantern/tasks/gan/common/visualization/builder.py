@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 if TYPE_CHECKING:
-    from ..pipeline import DeepfakePipeline
+    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import GanPix2PixPipeline
 
 
 class PreviewImageConfig(NamedTuple):
@@ -15,7 +15,7 @@ class PreviewImageConfig(NamedTuple):
 
 
 def create_preview_images(
-    configs: list[PreviewImageConfig], pipeline: "DeepfakePipeline"
+    configs: list[PreviewImageConfig], pipeline: "GanPix2PixPipeline"
 ) -> Tensor:
     images = []
     for conf in configs:

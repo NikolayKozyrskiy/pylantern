@@ -6,16 +6,16 @@ from torch import Tensor, nn
 
 from pylantern.common.utils import to_device
 
-from ..pipeline import GanPipeline
+from .pipeline import GanPix2PixPipeline
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import FacialComponentDiscriminator
     from pylantern.model_zoo.pix2pix import MultiscaleDiscriminator
 
-    from . import Pix2PixHDConfig
+    from ..configs import Pix2PixHDConfig
 
 
-class Pix2PixPipeline(GanPipeline):
+class Pix2PixHDPipeline(GanPix2PixPipeline):
     def __init__(
         self,
         config: "Pix2PixHDConfig",
@@ -81,8 +81,8 @@ class Pix2PixPipeline(GanPipeline):
 def pix2pix_pipeline_from_config(
     config: "Pix2PixHDConfig",
     device: Union[str, torch.device],
-) -> Pix2PixPipeline:
-    return Pix2PixPipeline(
+) -> Pix2PixHDPipeline:
+    return Pix2PixHDPipeline(
         config=config,
         generator=to_device(config.avaturn_swapper_model(), device=device),
         discriminator=to_device(config.discriminator_model(), device=device),

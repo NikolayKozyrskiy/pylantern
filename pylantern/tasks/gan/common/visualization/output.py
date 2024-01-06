@@ -17,15 +17,15 @@ from pylantern.common.utils.img import save_img, tensor_to_image
 from .builder import create_preview_images
 
 if TYPE_CHECKING:
-    from ..pipeline import DeepfakePipeline
+    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import GanPix2PixPipeline
 
 Args = ParamSpec("Args")
 R = TypeVar("R")
 
 
 def delayed(
-    f: Callable[Concatenate["DeepfakePipeline", Executor, str, Args], R]
-) -> Callable[[Args], Callable[["DeepfakePipeline", Executor, str], R]]:
+    f: Callable[Concatenate["GanPix2PixPipeline", Executor, str, Args], R]
+) -> Callable[[Args], Callable[["GanPix2PixPipeline", Executor, str], R]]:
     @functools.wraps(f)
     def partial(*args: Args.args, **kwargs: Args.kwargs):
         return functools.partial(f, *args, **kwargs)
@@ -36,7 +36,7 @@ def delayed(
 
 @delayed
 def save_previews(
-    pipeline: "DeepfakePipeline",
+    pipeline: "GanPix2PixPipeline",
     io_pool: Executor,
     root: Path,
     name_postfix: str = "",
@@ -51,7 +51,7 @@ def save_previews(
 
 @delayed
 def save_output_statistics(
-    pipeline: "DeepfakePipeline",
+    pipeline: "GanPix2PixPipeline",
     io_pool: Executor,
     root: Path,
     name_postfix: str = "",

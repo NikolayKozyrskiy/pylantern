@@ -15,10 +15,10 @@ from pylantern.tasks.gan.common.visualization.base import (
 from pylantern.tasks.gan.common.visualization.builder import PreviewImageConfig
 from pylantern.tasks.gan.common.visualization.output import save_previews
 
-from .data.constants import DatasetType
+from ..data.constants import DatasetType
 
 if TYPE_CHECKING:
-    from .pipeline import BasePix2PixPipeline
+    from ..pipelines.pipeline import BasePix2PixPipeline
 
 
 class BasePix2PixConfig(BaseConfig):

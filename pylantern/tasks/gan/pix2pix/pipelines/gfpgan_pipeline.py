@@ -9,7 +9,7 @@ from typing_extensions import override
 
 from pylantern.common.utils import to_device
 
-from ..pipeline import GanPipeline
+from .pipeline import GanPix2PixPipeline
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import (
@@ -17,10 +17,10 @@ if TYPE_CHECKING:
         StyleGAN2Discriminator,
     )
 
-    from . import GFPGANConfig
+    from ..configs import GFPGANConfig
 
 
-class GFPGANPipeline(GanPipeline):
+class GFPGANPipeline(GanPix2PixPipeline):
     def __init__(
         self,
         config: "GFPGANConfig",

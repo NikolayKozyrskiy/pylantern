@@ -1,6 +1,6 @@
 from pylantern.model_zoo.pix2pix import MultiscaleDiscriminator, p2p_discriminator
 
-from ..config import GanPix2PixConfig
+from .config import GanPix2PixConfig
 
 
 class Pix2PixHDConfig(GanPix2PixConfig):

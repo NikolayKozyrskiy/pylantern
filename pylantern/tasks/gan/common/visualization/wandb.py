@@ -12,12 +12,12 @@ from pylantern.common.utils.img import save_img, tensor_to_image
 from .builder import create_preview_images
 
 if TYPE_CHECKING:
-    from ..pipeline import DeepfakePipeline
+    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import GanPix2PixPipeline
 
 
 def log_images_to_wandb(
     loop: Loop,
-    pipeline: DeepfakePipeline,
+    pipeline: "GanPix2PixPipeline",
     prefix: str,
     img_show_num: int = 10,
 ) -> None:
