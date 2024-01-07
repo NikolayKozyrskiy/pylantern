@@ -1,24 +1,32 @@
 from concurrent.futures import Executor
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from matches.shortcuts.optimizer import LRSchedulerWrapper, SchedulerScopeType
 from torch.nn import Module
 from torch.optim import Adam, Optimizer
 
-from pylantern.common.utils.img import DEFAULT_MEAN, DEFAULT_STD
+from pylantern.common.constants import DEFAULT_IMG_MEAN, DEFAULT_IMG_STD
 from pylantern.config import BaseConfig
-from pylantern.tasks.gan.common.visualization.base import (
+from pylantern.tasks.gan.pix2pix.visualization.base import (
     original_image_dst_base,
     pred_image_base,
 )
 from pylantern.tasks.gan.common.visualization.builder import PreviewImageConfig
 from pylantern.tasks.gan.common.visualization.output import save_previews
-
-from ..data.constants import DatasetType
+from pylantern.tasks.gan.pix2pix.data.constants import DatasetType
 
 if TYPE_CHECKING:
-    from ..pipelines.pipeline import BasePix2PixPipeline
+    from pylantern.tasks.gan.pix2pix.pipelines import BasePix2PixPipeline
 
 
 class BasePix2PixConfig(BaseConfig):
@@ -38,6 +46,9 @@ class BasePix2PixConfig(BaseConfig):
     image_size: Tuple[int, int] = (512, 512)
     img_ext: str = "png"
 
+    beta1: float = 0.5
+    beta2: float = 0.999
+
     preview_config: list[PreviewImageConfig] = [
         PreviewImageConfig(base=original_image_dst_base, overlays=[]),
         PreviewImageConfig(base=pred_image_base, overlays=[]),
@@ -45,11 +56,6 @@ class BasePix2PixConfig(BaseConfig):
     output_config: list[Callable[["BasePix2PixPipeline", Executor, Path], None]] = [
         save_previews()
     ]
-
-
-class GanPix2PixConfig(BasePix2PixConfig):
-    beta1: float = 0.5
-    beta2: float = 0.999
 
     def generator_model(self, *args, **kwargs) -> "Module":
         raise NotImplementedError

@@ -8,15 +8,6 @@ import numpy as np
 from torch import Tensor
 from torch.nn import functional as F
 
-DEFAULT_MEAN = np.array([0.5, 0.5, 0.5])
-DEFAULT_STD = np.array([0.5, 0.5, 0.5])
-
-IMAGENET_MEAN = np.array([0.485, 0.456, 0.406])
-IMAGENET_STD = np.array([0.229, 0.224, 0.225])
-
-CLIP_MEAN = np.array([0.48145466, 0.4578275, 0.40821073])
-CLIP_STD = np.array([0.26862954, 0.26130258, 0.27577711])
-
 
 def load_img(src_path: Path, convert_bgr2rgb: bool = False) -> Optional[np.ndarray]:
     try:

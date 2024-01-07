@@ -17,8 +17,8 @@ from pylantern.tasks.gan.common.visualization.wandb import log_images_to_wandb
 
 from ..configs import BasePix2PixConfig
 from ..data.dataloaders import get_train_loader, get_validation_loader
-from ..output_dispatcher import GanPix2PixOutputDispatcher
-from ..pipelines import BasePix2PixPipeline, pipeline_from_config
+from ..output_dispatchers.output_dispatcher import GanPix2PixOutputDispatcher
+from ..pipelines import BasePix2PixPipeline, base_pix2pix_pipeline_from_config
 
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
 warnings.simplefilter("ignore")
@@ -38,7 +38,7 @@ def train_baseline_fn(
     train_loader = loop._loader_override(get_train_loader(config), "train")
     valid_loader = loop._loader_override(get_validation_loader(config), "valid")
 
-    pipeline: "BasePix2PixPipeline" = pipeline_from_config(config, device)
+    pipeline: "BasePix2PixPipeline" = base_pix2pix_pipeline_from_config(config, device)
     config.preprocess(loop, pipeline)
     pipeline.face_swapper = auto_model(pipeline.face_swapper)
 
@@ -144,7 +144,7 @@ def infer_baseline_fn(
     output_name = checkpoint if output_name is None else output_name
 
     loader = get_validation_loader(config)
-    pipeline: "BasePix2PixPipeline" = pipeline_from_config(config, device)
+    pipeline: "BasePix2PixPipeline" = base_pix2pix_pipeline_from_config(config, device)
 
     out_dispatcher = GanPix2PixOutputDispatcher(config=config, device=device)
 

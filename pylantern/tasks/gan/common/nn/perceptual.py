@@ -6,8 +6,8 @@ from torch import Tensor
 from torch.nn import functional as F
 from torchvision import models
 
+from pylantern.common.constants import IMAGENET_IMG_MEAN, IMAGENET_IMG_STD
 from pylantern.common.nn.functional import gram_matrix
-from pylantern.common.utils.img import IMAGENET_MEAN, IMAGENET_STD
 
 
 class Vgg19(nn.Module):
@@ -60,10 +60,11 @@ class VGG19Loss(nn.Module):
         self.criterion = nn.L1Loss(reduction=reduction)
         self.weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
         self.register_buffer(
-            "mean", torch.tensor(IMAGENET_MEAN, dtype=torch.float32).view(1, 3, 1, 1)
+            "mean",
+            torch.tensor(IMAGENET_IMG_MEAN, dtype=torch.float32).view(1, 3, 1, 1),
         )
         self.register_buffer(
-            "std", torch.tensor(IMAGENET_STD, dtype=torch.float32).view(1, 3, 1, 1)
+            "std", torch.tensor(IMAGENET_IMG_STD, dtype=torch.float32).view(1, 3, 1, 1)
         )
         self._vgg_img_size = (224, 224)
 

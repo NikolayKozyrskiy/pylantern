@@ -1,4 +1,4 @@
-from ..pix2pixhd import Pix2PixHDConfig
+from . import Pix2PixHDConfig
 
 
 class SpadeConfig(Pix2PixHDConfig):

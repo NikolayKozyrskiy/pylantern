@@ -1,4 +1,7 @@
-from .config import BasePix2PixConfig, GanPix2PixConfig
-from .gfpgan_config import GFPGANConfig
-from .pix2pixhd_config import Pix2PixHDConfig
-from .spade_config import SpadeConfig
+from .face import (
+    FaceGFPGANConfig,
+    FacePix2PixConfig,
+    FacePix2PixHDConfig,
+    FaceSpadeConfig,
+)
+from .general import BasePix2PixConfig, GFPGANConfig, Pix2PixHDConfig, SpadeConfig

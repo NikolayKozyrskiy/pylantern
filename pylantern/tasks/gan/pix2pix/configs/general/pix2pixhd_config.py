@@ -1,9 +1,9 @@
 from pylantern.model_zoo.pix2pix import MultiscaleDiscriminator, p2p_discriminator
 
-from .config import GanPix2PixConfig
+from . import BasePix2PixConfig
 
 
-class Pix2PixHDConfig(GanPix2PixConfig):
+class Pix2PixHDConfig(BasePix2PixConfig):
     # '# of input image channels'
     input_nc: int = 3
     # 'weight for feature matching loss'

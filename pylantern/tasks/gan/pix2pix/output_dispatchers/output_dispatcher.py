@@ -7,28 +7,20 @@ from matches.loop import Loop
 
 from pylantern.common.nn.functional import gram_matrix, mse_reduction
 from pylantern.output_dispatcher import BaseOutputDispatcher
-from pylantern.tasks.gan.common.nn.gan_loss import compute_pix2pix_hd_mse
+from pylantern.tasks.gan.pix2pix.criterions.pix2pixhd_loss import compute_pix2pix_hd_mse
 
-from . import complex_criterions as cc
+from .. import complex_criterions as cc
 
 if TYPE_CHECKING:
-    from .configs import (
-        BasePix2PixConfig,
-        GanPix2PixConfig,
-        GFPGANConfig,
-        Pix2PixHDConfig,
-    )
-    from .pipelines import (
-        BasePix2PixPipeline,
-        GanPix2PixPipeline,
-        GFPGANPipeline,
-        Pix2PixHDPipeline,
-    )
+    from ..configs import BasePix2PixConfig, GFPGANConfig, Pix2PixHDConfig
+    from ..pipelines import BasePix2PixPipeline, GFPGANPipeline, Pix2PixHDPipeline
 
 
 class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
     def __init__(self, config: "BasePix2PixConfig", *args, **kwargs):
-        super().__init__(config=config, complex_criterions_module=cc, *args, **kwargs)
+        BaseOutputDispatcher.__init__(
+            self, config=config, complex_criterions_module=cc, *args, **kwargs
+        )
 
     def gan__temporal_mse(
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
@@ -99,7 +91,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         return loss
 
     def gan__vision_aided_discriminator(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = self.complex_criterions.vision_aided_discriminator(
             pipeline.image_dst_normalized(), for_real=True
@@ -107,16 +99,16 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         loss = (
             loss
             + self.complex_criterions.vision_aided_discriminator(
-                pipeline.face_swapper_generate_image(), for_real=False
+                pipeline.get_predicted_image(), for_real=False
             ).mean()
         )
         return loss
 
     def gan__vision_aided_generator(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = self.complex_criterions.vision_aided_discriminator(
-            pipeline.face_swapper_generate_image(), for_G=True
+            pipeline.get_predicted_image(), for_G=True
         ).mean()
         return loss
 
@@ -125,7 +117,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
     ):
         loss = (
             self.complex_criterions.vgg19_perceptual(
-                pipeline.face_swapper_generate_image_destandardized(),
+                pipeline.get_predicted_image_destandardized(),
                 pipeline.image_dst_scaled().detach(),
             )
             * pipeline.config.lambda_feat
@@ -136,7 +128,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = self.complex_criterions.vgg19_perceptual_and_style(
-            pipeline.face_swapper_generate_image_destandardized(),
+            pipeline.get_predicted_image_destandardized(),
             pipeline.image_dst_scaled().detach(),
         )
         return loss
@@ -145,7 +137,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = self.complex_criterions.lpips_alex_perceptual(
-            pipeline.face_swapper_generate_image(),
+            pipeline.get_predicted_image(),
             pipeline.image_dst_normalized(),
         ).mean()
         return loss
@@ -154,10 +146,10 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         pred = self.complex_criterions.dreamsim_ensemble.embed(
-            pipeline.generated_img_resized_destandardized_224()
+            pipeline.get_predicted_image_resized_destandardized_224()
         )
         gt = self.complex_criterions.dreamsim_ensemble.embed(
-            pipeline.dst_img_resized_scaled_224(),
+            pipeline.image_dst_resized_scaled_224(),
         ).detach()
         return (1 - F.cosine_similarity(pred, gt, dim=-1)).mean()
 
@@ -168,7 +160,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
             pipeline.dst_img_normalized_gray_128()
         ).detach()
         identity_out = self.complex_criterions.gfpgan_identity_arcface_resnet18(
-            pipeline.generated_img_normalized_gray_128()
+            pipeline.get_predicted_image_normalized_gray_128()
         )
         loss = F.smooth_l1_loss(identity_out, identity_gt, beta=0.01, reduction="mean")
         return loss
@@ -177,10 +169,10 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         identity_gt = self.complex_criterions.identity_arcface_iresnet18(
-            pipeline.dst_img_normalized_112()
+            pipeline.image_dst_normalized_112()
         ).detach()
         identity_out = self.complex_criterions.identity_arcface_iresnet18(
-            pipeline.generated_img_normalized_112()
+            pipeline.get_predicted_image_normalized_112()
         )
         loss = F.smooth_l1_loss(identity_out, identity_gt, beta=0.01, reduction="mean")
         return loss
@@ -189,10 +181,10 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         identity_gt = self.complex_criterions.identity_arcface_iresnet34(
-            pipeline.dst_img_normalized_112()
+            pipeline.image_dst_normalized_112()
         ).detach()
         identity_out = self.complex_criterions.identity_arcface_iresnet34(
-            pipeline.generated_img_normalized_112()
+            pipeline.get_predicted_image_normalized_112()
         )
         loss = F.smooth_l1_loss(identity_out, identity_gt, beta=0.01, reduction="mean")
         return loss
@@ -201,10 +193,10 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         identity_gt = self.complex_criterions.identity_arcface_iresnet50(
-            pipeline.dst_img_normalized_112()
+            pipeline.image_dst_normalized_112()
         ).detach()
         identity_out = self.complex_criterions.identity_arcface_iresnet50(
-            pipeline.generated_img_normalized_112()
+            pipeline.get_predicted_image_normalized_112()
         )
         loss = F.smooth_l1_loss(identity_out, identity_gt, beta=0.01, reduction="mean")
         return loss
@@ -213,10 +205,10 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         identity_gt = self.complex_criterions.identity_arcface_iresnet100(
-            pipeline.dst_img_normalized_112()
+            pipeline.image_dst_normalized_112()
         ).detach()
         identity_out = self.complex_criterions.identity_arcface_iresnet100(
-            pipeline.generated_img_normalized_112()
+            pipeline.get_predicted_image_normalized_112()
         )
         loss = F.smooth_l1_loss(identity_out, identity_gt, beta=0.01, reduction="mean")
         return loss
@@ -225,11 +217,11 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         identity_gt = self.complex_criterions.face_clip.encode_image(
-            pipeline.dst_img_resized_scaled_224()
+            pipeline.image_dst_resized_scaled_224()
             # pipeline.dst_img_arcface_aligned_scaled_224()
         ).detach()
         identity_out = self.complex_criterions.face_clip.encode_image(
-            pipeline.generated_img_resized_destandardized_224()
+            pipeline.get_predicted_image_resized_destandardized_224()
             # pipeline.generated_img_arcface_aligned_destandardized_224()
         )
         loss = F.smooth_l1_loss(identity_out, identity_gt, beta=0.01, reduction="mean")
@@ -249,7 +241,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = self.complex_criterions.sobel(
-            pipeline.face_swapper_generate_image_destandardized(),
+            pipeline.get_predicted_image_destandardized(),
             pipeline.image_dst_scaled(),
         )
         return loss
@@ -258,7 +250,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = self.complex_criterions.ms_dssim(
-            pipeline.face_swapper_generate_image_destandardized(),
+            pipeline.get_predicted_image_destandardized(),
             pipeline.image_dst_scaled(),
         )
         return loss
@@ -267,7 +259,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = F.smooth_l1_loss(
-            pipeline.face_swapper_generate_image(),
+            pipeline.get_predicted_image(),
             pipeline.image_dst_normalized(),
             beta=0.001,
             reduction="mean",
@@ -278,7 +270,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = F.smooth_l1_loss(
-            pipeline.face_swapper_generate_image_lab(),
+            pipeline.get_predicted_image_lab(),
             pipeline.image_dst_lab(),
             beta=0.1,
             reduction="mean",
@@ -289,7 +281,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = F.mse_loss(
-            pipeline.face_swapper_generate_image_lab(),
+            pipeline.get_predicted_image_lab(),
             pipeline.image_dst_lab(),
             reduction="mean",
         )
@@ -299,7 +291,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = F.l1_loss(
-            pipeline.face_swapper_generate_image(),
+            pipeline.get_predicted_image(),
             pipeline.image_dst_normalized(),
             reduction="mean",
         )
@@ -309,7 +301,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         loss = F.mse_loss(
-            pipeline.face_swapper_generate_image(),
+            pipeline.get_predicted_image(),
             pipeline.image_dst_normalized(),
             reduction="mean",
         )
@@ -320,7 +312,7 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
     ):
         mse = torch.mean(
             (
-                pipeline.face_swapper_generate_image_destandardized()
+                pipeline.get_predicted_image_destandardized()
                 - pipeline.image_dst_scaled()
             )
             ** 2,
@@ -331,11 +323,11 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
 
 
 class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
-    def __init__(self, config: "GanPix2PixConfig", *args, **kwargs):
+    def __init__(self, config: "BasePix2PixConfig", *args, **kwargs):
         super().__init__(config=config, *args, **kwargs)
 
     def component__generator_left_eye(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         return self.complex_criterions.components_gan_loss(
             pipeline.discriminator_left_eye_fake()[0],
@@ -344,7 +336,7 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         )
 
     def component__generator_right_eye(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         return self.complex_criterions.components_gan_loss(
             pipeline.discriminator_right_eye_fake()[0],
@@ -353,14 +345,14 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         )
 
     def component__generator_mouth(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         return self.complex_criterions.components_gan_loss(
             pipeline.discriminator_mouth_fake()[0], target_is_real=True, is_disc=False
         )
 
     def component__style_left_eye(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         fake_feats = pipeline.discriminator_left_eye_fake()[1]
         real_feats = pipeline.discriminator_left_eye_dst()[1]
@@ -376,7 +368,7 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         return loss
 
     def component__style_right_eye(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         fake_feats = pipeline.discriminator_right_eye_fake()[1]
         real_feats = pipeline.discriminator_right_eye_dst()[1]
@@ -392,7 +384,7 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         return loss
 
     def component__style_mouth(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         fake_feats = pipeline.discriminator_mouth_fake()[1]
         real_feats = pipeline.discriminator_mouth_dst()[1]
@@ -408,7 +400,7 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         return loss
 
     def component__disc_left_eye(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         fake_d_pred = pipeline.discriminate_left_eye_fake()
         real_d_pred = pipeline.discriminate_left_eye_dst()
@@ -419,7 +411,7 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         return loss
 
     def component__disc_right_eye(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         fake_d_pred = pipeline.discriminate_right_eye_fake()
         real_d_pred = pipeline.discriminate_right_eye_dst()
@@ -430,7 +422,7 @@ class GanPix2PixOutputDispatcher(BasePix2PixOutputDispatcher):
         return loss
 
     def component__disc_mouth(
-        self, pipeline: "GanPix2PixPipeline", loop: "Loop", *args, **kwargs
+        self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
         fake_d_pred = pipeline.discriminate_mouth_fake()
         real_d_pred = pipeline.discriminate_mouth_dst()
@@ -541,7 +533,7 @@ class GFPGANOutputDispatcher(GanPix2PixOutputDispatcher):
         self, pipeline: "GFPGANPipeline", loop: "Loop", *args, **kwargs
     ):
         loss, loss_style = self.complex_criterions.vgg19_perceptual_basicsr(
-            x=pipeline.face_swapper_generate_image(),
+            x=pipeline.get_predicted_image(),
             gt=pipeline.image_dst_normalized(),
         )
         return loss + loss_style

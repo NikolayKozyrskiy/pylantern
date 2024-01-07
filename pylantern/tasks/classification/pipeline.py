@@ -23,7 +23,7 @@ class ClassificationPipeline(BasePipeline):
         config: "ClassificationConfig",
         classifier_model: Module,
     ):
-        super().__init__(config=config)
+        BasePipeline.__init__(self, config=config)
         self.config = config
         self.classifier_model = classifier_model
         self.num_classes = config.num_classes

@@ -1,3 +1,17 @@
-from .gfpgan_pipeline import GFPGANPipeline, gfpgan_pipeline_from_config
-from .pipeline import BasePix2PixPipeline, GanPix2PixPipeline, pipeline_from_config
-from .pix2pixhd_pipeline import Pix2PixHDPipeline, pix2pix_pipeline_from_config
+from .face import (
+    FaceGFPGANPipeline,
+    FacePix2PixHDPipeline,
+    FacePix2PixPipeline,
+    FaceSpadePipeline,
+    face_gfpgan_pipeline_from_config,
+    face_pix2pixhd_pipeline_from_config,
+    face_spade_pipeline_from_config,
+)
+from .general import (
+    BasePix2PixPipeline,
+    GFPGANPipeline,
+    Pix2PixHDPipeline,
+    base_pix2pix_pipeline_from_config,
+    gfpgan_pipeline_from_config,
+    pix2pix_pipeline_from_config,
+)

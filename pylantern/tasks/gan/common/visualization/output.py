@@ -17,15 +17,17 @@ from pylantern.common.utils.img import save_img, tensor_to_image
 from .builder import create_preview_images
 
 if TYPE_CHECKING:
-    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import GanPix2PixPipeline
+    from pylantern.tasks.gan.pix2pix.pipelines.general.pipeline import (
+        BasePix2PixPipeline,
+    )
 
 Args = ParamSpec("Args")
 R = TypeVar("R")
 
 
 def delayed(
-    f: Callable[Concatenate["GanPix2PixPipeline", Executor, str, Args], R]
-) -> Callable[[Args], Callable[["GanPix2PixPipeline", Executor, str], R]]:
+    f: Callable[Concatenate["BasePix2PixPipeline", Executor, str, Args], R]
+) -> Callable[[Args], Callable[["BasePix2PixPipeline", Executor, str], R]]:
     @functools.wraps(f)
     def partial(*args: Args.args, **kwargs: Args.kwargs):
         return functools.partial(f, *args, **kwargs)
@@ -36,7 +38,7 @@ def delayed(
 
 @delayed
 def save_previews(
-    pipeline: "GanPix2PixPipeline",
+    pipeline: "BasePix2PixPipeline",
     io_pool: Executor,
     root: Path,
     name_postfix: str = "",
@@ -51,7 +53,7 @@ def save_previews(
 
 @delayed
 def save_output_statistics(
-    pipeline: "GanPix2PixPipeline",
+    pipeline: "BasePix2PixPipeline",
     io_pool: Executor,
     root: Path,
     name_postfix: str = "",
@@ -64,7 +66,7 @@ def save_output_statistics(
             d1[k] += d2[k]
 
     with torch.no_grad():
-        imgs = pipeline.face_swapper_generate_image()
+        imgs = pipeline.get_predicted_image()
         statistics["mean"].append(
             imgs.mean(dim=(1, 2, 3)).mean().cpu().detach().tolist()
         )

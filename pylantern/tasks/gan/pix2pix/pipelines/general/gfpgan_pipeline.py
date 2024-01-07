@@ -9,39 +9,30 @@ from typing_extensions import override
 
 from pylantern.common.utils import to_device
 
-from .pipeline import GanPix2PixPipeline
+from .. import BasePix2PixPipeline
 
 if TYPE_CHECKING:
-    from pylantern.model_zoo.gfpgan import (
-        FacialComponentDiscriminator,
-        StyleGAN2Discriminator,
-    )
-
-    from ..configs import GFPGANConfig
+    from pylantern.model_zoo.gfpgan import StyleGAN2Discriminator
+    from pylantern.tasks.gan.pix2pix.configs import GFPGANConfig
 
 
-class GFPGANPipeline(GanPix2PixPipeline):
+class GFPGANPipeline(BasePix2PixPipeline):
     def __init__(
         self,
         config: "GFPGANConfig",
-        generator: "nn.Module",
-        discriminator: "StyleGAN2Discriminator",
+        generator_model: "nn.Module",
+        discriminator_model: "StyleGAN2Discriminator",
         device: Union[str, torch.device],
-        discriminator_left_eye: Optional["FacialComponentDiscriminator"] = None,
-        discriminator_right_eye: Optional["FacialComponentDiscriminator"] = None,
-        discriminator_mouth: Optional["FacialComponentDiscriminator"] = None,
     ):
-        super().__init__(
+        BasePix2PixPipeline.__init__(
+            self,
             config=config,
-            generator=generator,
-            discriminator=discriminator,
+            generator_model=generator_model,
+            discriminator_model=discriminator_model,
             device=device,
-            discriminator_left_eye=discriminator_left_eye,
-            discriminator_right_eye=discriminator_right_eye,
-            discriminator_mouth=discriminator_mouth,
         )
         self.config: "GFPGANConfig"
-        self.discriminator: "StyleGAN2Discriminator"
+        self.discriminator_model: "StyleGAN2Discriminator"
         self.log_size = int(math.log(self.config.image_size[0], 2))
         self.use_rgbs = (
             "loss__pyramid_reconstruction"
@@ -136,7 +127,7 @@ class GFPGANPipeline(GanPix2PixPipeline):
 
     @graph_node
     @override
-    def face_swapper_generate_image(self) -> Tensor:
+    def get_predicted_image(self) -> Tensor:
         pred = (
             self.generate_image_and_pyramid_masked()[0]
             if self.config.predict_mask
@@ -151,26 +142,26 @@ class GFPGANPipeline(GanPix2PixPipeline):
 
     @graph_node
     def discriminate_generator_fake_normalized_input(self) -> Tensor:
-        generator_output = self.face_swapper_generate_image()
-        discriminator_output = self.discriminator(generator_output)
+        generator_output = self.get_predicted_image()
+        discriminator_output = self.discriminator_model(generator_output)
         return discriminator_output
 
     @graph_node
     def discriminate_discriminator_fake_normalized_input(self) -> Tensor:
-        generator_output = self.face_swapper_generate_image().detach()
-        discriminator_output = self.discriminator(generator_output)
+        generator_output = self.get_predicted_image().detach()
+        discriminator_output = self.discriminator_model(generator_output)
         return discriminator_output
 
     @graph_node
     def discriminate_discriminator_dst_normalized_input(self) -> Tensor:
         dst_img = self.image_dst_normalized()
-        discriminator_output = self.discriminator(dst_img)
+        discriminator_output = self.discriminator_model(dst_img)
         return discriminator_output
 
     @graph_node
     def discriminate_discriminator_dst_normalized_with_grad(self):
         dst_img = self.image_dst_normalized_with_grad()
-        real_pred = self.discriminator(dst_img)
+        real_pred = self.discriminator_model(dst_img)
         return real_pred
 
 
@@ -180,16 +171,7 @@ def gfpgan_pipeline_from_config(
 ) -> GFPGANPipeline:
     return GFPGANPipeline(
         config=config,
-        generator=to_device(config.avaturn_swapper_model(), device=device),
-        discriminator=to_device(config.discriminator_model(), device=device),
-        discriminator_left_eye=to_device(
-            config.discriminator_left_eye_model(), device=device
-        ),
-        discriminator_right_eye=to_device(
-            config.discriminator_right_eye_model(), device=device
-        ),
-        discriminator_mouth=to_device(
-            config.discriminator_mouth_model(), device=device
-        ),
+        generator_model=to_device(config.generator_model(), device=device),
+        discriminator_model=to_device(config.discriminator_model(), device=device),
         device=device,
     )

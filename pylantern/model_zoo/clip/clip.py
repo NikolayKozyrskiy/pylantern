@@ -13,7 +13,7 @@ from torch import nn
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 from tqdm import tqdm
 
-from pylantern.common.utils.img import CLIP_MEAN, CLIP_STD
+from pylantern.common.constants import CLIP_IMG_MEAN, CLIP_IMG_STD
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -602,10 +602,12 @@ class CLIP(nn.Module):
         self.initialize_parameters()
 
         self.register_buffer(
-            "image_mean", torch.tensor(CLIP_MEAN, dtype=torch.float32).view(1, 3, 1, 1)
+            "image_mean",
+            torch.tensor(CLIP_IMG_MEAN, dtype=torch.float32).view(1, 3, 1, 1),
         )
         self.register_buffer(
-            "image_std", torch.tensor(CLIP_STD, dtype=torch.float32).view(1, 3, 1, 1)
+            "image_std",
+            torch.tensor(CLIP_IMG_STD, dtype=torch.float32).view(1, 3, 1, 1),
         )
 
     def initialize_parameters(self):

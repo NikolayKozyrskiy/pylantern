@@ -8,10 +8,10 @@ from pylantern.model_zoo.gfpgan import (
     stylegan2_discriminator,
 )
 
-from .config import GanPix2PixConfig
+from . import BasePix2PixConfig
 
 
-class GFPGANConfig(GanPix2PixConfig):
+class GFPGANConfig(BasePix2PixConfig):
     num_style_feat: int = 512
     fix_decoder: bool = True
     channel_multiplier: int = 1

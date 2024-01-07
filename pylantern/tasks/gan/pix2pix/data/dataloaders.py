@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 def get_train_loader(config: "BasePix2PixConfig") -> "DataloaderSchedulerWrapper":
     if config.dataset_type == DatasetType.IMAGE_FOLDER:
         dataset = ImageFolderDataset(
-            data_root=config.data_root,
+            data_root=config.root_path,
             attributes=config.attrs_to_load,
             fold_ids=config.train_folds,
             split=config.split,
@@ -39,7 +39,7 @@ def get_train_loader(config: "BasePix2PixConfig") -> "DataloaderSchedulerWrapper
 def get_validation_loader(config: "BasePix2PixConfig") -> "DataLoader":
     if config.dataset_type == DatasetType.IMAGE_FOLDER:
         dataset = ImageFolderDataset(
-            data_root=config.data_root,
+            data_root=config.root_path,
             attributes=config.attrs_to_load,
             fold_ids=config.valid_folds,
             split=config.split,
@@ -62,7 +62,7 @@ def get_eval_loader(
 ) -> "DataLoader":
     if config.dataset_type == DatasetType.IMAGE_FOLDER:
         dataset = ImageFolderDataset(
-            data_root=data_root if data_root is not None else config.data_root,
+            data_root=data_root if data_root is not None else config.root_path,
             attributes=config.attrs_to_load,
             fold_ids=fold_ids if fold_ids is not None else config.valid_folds,
             split=split if split is not None else config.split,
