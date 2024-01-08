@@ -102,6 +102,6 @@ config = Config(
     single_pass_length=1.0,
     checkpoint_path=None,
     output_config=[],
-    preview_image_fns=[],
+    preview_config=[],
     log_vis_fns=[],  # [log_to_wandb_gt_pred_labels]
 )

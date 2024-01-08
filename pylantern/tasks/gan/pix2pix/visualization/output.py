@@ -1,54 +1,18 @@
 from __future__ import annotations
 
-import functools
 from collections import defaultdict
 from concurrent.futures import Executor
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, TypeVar
+from typing import TYPE_CHECKING
 
-import cv2
 import numpy as np
 import torch
-from typing_extensions import Concatenate, ParamSpec
 
-from pylantern.common.utils import append_json, mkdir
-from pylantern.common.utils.img import save_img, tensor_to_image
-
-from .builder import create_preview_images
+from pylantern.common.utils import append_json
+from pylantern.common.visualization.utils import delayed
 
 if TYPE_CHECKING:
-    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import (
-        BasePix2PixPipeline,
-    )
-
-Args = ParamSpec("Args")
-R = TypeVar("R")
-
-
-def delayed(
-    f: Callable[Concatenate["BasePix2PixPipeline", Executor, str, Args], R]
-) -> Callable[[Args], Callable[["BasePix2PixPipeline", Executor, str], R]]:
-    @functools.wraps(f)
-    def partial(*args: Args.args, **kwargs: Args.kwargs):
-        return functools.partial(f, *args, **kwargs)
-
-    # noinspection PyTypeChecker
-    return partial
-
-
-@delayed
-def save_previews(
-    pipeline: "BasePix2PixPipeline",
-    io_pool: Executor,
-    root: Path,
-    name_postfix: str = "",
-):
-    images_dir = mkdir(root / "previews")
-    images = create_preview_images(pipeline.config.preview_config, pipeline)
-    images = tensor_to_image(images, keepdim=True, val_range=(0.0, 1.0))
-
-    for name, im_i in zip(pipeline.batch["name"], images):
-        io_pool.submit(save_img, im_i, images_dir / f"{name}_{name_postfix}.jpg", True)
+    from pylantern.tasks.gan.pix2pix.pipelines import BasePix2PixPipeline
 
 
 @delayed

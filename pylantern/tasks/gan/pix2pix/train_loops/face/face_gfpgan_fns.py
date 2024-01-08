@@ -18,7 +18,7 @@ from pylantern.common.utils.metrics_logging import (
 )
 from pylantern.common.utils.module import set_requires_grad
 from pylantern.config import load_config
-from pylantern.tasks.gan.common.visualization.wandb import log_images_to_wandb
+from pylantern.common.visualization.image.wandb import log_images_to_wandb
 from pylantern.tasks.gan.pix2pix.data.dataloaders import (
     get_train_loader,
     get_validation_loader,

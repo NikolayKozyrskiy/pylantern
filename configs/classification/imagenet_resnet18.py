@@ -102,6 +102,6 @@ config = Config(
     checkpoint_path=None,
     shuffle_train=True,
     output_config=[],
-    preview_image_fns=[],
+    preview_config=[],
     log_vis_fns=[],
 )

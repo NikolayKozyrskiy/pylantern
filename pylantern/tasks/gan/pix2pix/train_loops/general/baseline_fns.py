@@ -13,7 +13,7 @@ from pylantern.common.train_utils import predict_dataloader
 from pylantern.common.utils import get_device
 from pylantern.common.utils.metrics_logging import consume_metric, log_optimizer_lrs
 from pylantern.config import load_config
-from pylantern.tasks.gan.common.visualization.wandb import log_images_to_wandb
+from pylantern.common.visualization.image.wandb import log_images_to_wandb
 from pylantern.tasks.gan.pix2pix.configs import BasePix2PixConfig
 from pylantern.tasks.gan.pix2pix.data.dataloaders import (
     get_train_loader,

@@ -2,12 +2,13 @@ from typing import TYPE_CHECKING
 
 import imageio
 import wandb
+from ignite.distributed import one_rank_only
 from matches.loop import Loop
 
 from pylantern.common.utils.img import tensor_to_image
 
 if TYPE_CHECKING:
-    from .pipeline import ClassificationPipeline
+    from ..pipeline import ClassificationPipeline
 
 
 def images_gt(pipeline: "ClassificationPipeline"):
@@ -38,7 +39,12 @@ def log_to_wandb_gt_pred_labels(
         )
         data[f"images/{id_}"] = wandb.Image(str(res_path.resolve()), caption=f"ep={ep}")
 
-    wandb.log(
-        data,
-        commit=False,
-    )
+    @one_rank_only()
+    def _log():
+        wandb.log(
+            data,
+            commit=False,
+        )
+
+    _log()
+    return None
