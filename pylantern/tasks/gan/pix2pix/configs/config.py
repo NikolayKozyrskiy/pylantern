@@ -26,6 +26,10 @@ from pylantern.tasks.gan.pix2pix.visualization.base import (
 )
 
 if TYPE_CHECKING:
+    from pylantern.tasks.gan.pix2pix.models import (
+        GeneratorInferenceModel,
+        GeneratorModel,
+    )
     from pylantern.tasks.gan.pix2pix.pipelines import BasePix2PixPipeline
 
 
@@ -57,7 +61,9 @@ class BasePix2PixConfig(BaseConfig):
         save_previews()
     ]
 
-    def generator_model(self, *args, **kwargs) -> "Module":
+    def generator_model(
+        self, *args, **kwargs
+    ) -> Union["GeneratorModel", "GeneratorInferenceModel"]:
         raise NotImplementedError
 
     def discriminator_model(self, *args, **kwargs) -> "Module":

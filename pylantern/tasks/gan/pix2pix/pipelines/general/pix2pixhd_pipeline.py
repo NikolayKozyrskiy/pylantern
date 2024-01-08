@@ -10,13 +10,14 @@ from pylantern.tasks.gan.pix2pix.pipelines.pipeline import BasePix2PixPipeline
 if TYPE_CHECKING:
     from pylantern.model_zoo.pix2pix import MultiscaleDiscriminator
     from pylantern.tasks.gan.pix2pix.configs import Pix2PixHDConfig
+    from pylantern.tasks.gan.pix2pix.models import GeneratorModel
 
 
 class Pix2PixHDPipeline(BasePix2PixPipeline):
     def __init__(
         self,
         config: "Pix2PixHDConfig",
-        generator_model: "nn.Module",
+        generator_model: "GeneratorModel",
         discriminator_model: "MultiscaleDiscriminator",
         device: Union[str, torch.device],
     ):

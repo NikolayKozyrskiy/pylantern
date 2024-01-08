@@ -2,7 +2,7 @@ from typing import Any, List, Sequence, Union
 
 from torch import Tensor, nn
 
-from pylantern.tasks.gan.pix2pix.models.preprocessor import (
+from pylantern.tasks.gan.pix2pix.models.general.preprocessor import (
     Preprocessor,
     PreprocessorInferenceWrapper,
 )

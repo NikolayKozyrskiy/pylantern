@@ -23,13 +23,14 @@ from pylantern.common.utils.tensor import denormalize_tensor, normalize_tensor
 
 if TYPE_CHECKING:
     from pylantern.tasks.gan.pix2pix.configs import BasePix2PixConfig
+    from pylantern.tasks.gan.pix2pix.models import GeneratorModel
 
 
 class BasePix2PixPipeline(BasePipeline):
     def __init__(
         self,
         config: "BasePix2PixConfig",
-        generator_model: "nn.Module",
+        generator_model: "GeneratorModel",
         discriminator_model: "nn.Module",
         device: Union[str, torch.device],
     ):

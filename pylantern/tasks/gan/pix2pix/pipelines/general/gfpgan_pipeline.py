@@ -13,13 +13,14 @@ from pylantern.tasks.gan.pix2pix.pipelines.pipeline import BasePix2PixPipeline
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import StyleGAN2Discriminator
     from pylantern.tasks.gan.pix2pix.configs import GFPGANConfig
+    from pylantern.tasks.gan.pix2pix.models import GeneratorModel
 
 
 class GFPGANPipeline(BasePix2PixPipeline):
     def __init__(
         self,
         config: "GFPGANConfig",
-        generator_model: "nn.Module",
+        generator_model: "GeneratorModel",
         discriminator_model: "StyleGAN2Discriminator",
         device: Union[str, torch.device],
     ):

@@ -33,7 +33,7 @@ def arcface_iresnet18(root_dir: str, requires_grad: bool = False) -> Module:
     checkpoint = torch.load(
         os.path.join(root_dir, "arcface_fp16_r18.pth"), map_location="cpu"
     )
-    return model_eval(model=model, checkpoint=checkpoint, requires_grad=requires_grad)
+    return model_eval(model=model, state_dict=checkpoint, requires_grad=requires_grad)
 
 
 def arcface_iresnet34(root_dir: str, requires_grad: bool = False) -> Module:
@@ -43,7 +43,7 @@ def arcface_iresnet34(root_dir: str, requires_grad: bool = False) -> Module:
     checkpoint = torch.load(
         os.path.join(root_dir, "arcface_fp16_r34.pth"), map_location="cpu"
     )
-    return model_eval(model=model, checkpoint=checkpoint, requires_grad=requires_grad)
+    return model_eval(model=model, state_dict=checkpoint, requires_grad=requires_grad)
 
 
 def arcface_iresnet50(root_dir: str, requires_grad: bool = False) -> Module:
@@ -53,7 +53,7 @@ def arcface_iresnet50(root_dir: str, requires_grad: bool = False) -> Module:
     checkpoint = torch.load(
         os.path.join(root_dir, "arcface_fp16_r50.pth"), map_location="cpu"
     )
-    return model_eval(model=model, checkpoint=checkpoint, requires_grad=requires_grad)
+    return model_eval(model=model, state_dict=checkpoint, requires_grad=requires_grad)
 
 
 def arcface_iresnet100(root_dir: str, requires_grad: bool = False) -> Module:
@@ -63,7 +63,7 @@ def arcface_iresnet100(root_dir: str, requires_grad: bool = False) -> Module:
     checkpoint = torch.load(
         os.path.join(root_dir, "arcface_fp16_r100.pth"), map_location="cpu"
     )
-    return model_eval(model=model, checkpoint=checkpoint, requires_grad=requires_grad)
+    return model_eval(model=model, state_dict=checkpoint, requires_grad=requires_grad)
 
 
 def codeformer(root_dir: str) -> Module:
@@ -100,7 +100,7 @@ def gfpgan_arcface_resnet18(root_dir: str, requires_grad: bool = False) -> Modul
         os.path.join(root_dir, "arcface_resnet18.pth"), map_location="cpu"
     )
     checkpoint = remove_module_from_state_dict(checkpoint)
-    return model_eval(model=model, checkpoint=checkpoint, requires_grad=requires_grad)
+    return model_eval(model=model, state_dict=checkpoint, requires_grad=requires_grad)
 
 
 def gfpgan_v14(root_dir: str) -> Module:

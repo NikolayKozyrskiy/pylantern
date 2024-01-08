@@ -28,6 +28,7 @@ if TYPE_CHECKING:
         FacePix2PixHDConfig,
         FaceSpadeConfig,
     )
+    from pylantern.tasks.gan.pix2pix.models import FaceGeneratorModel
 
 
 class FacePix2PixPipeline(BasePix2PixPipeline):
@@ -40,6 +41,7 @@ class FacePix2PixPipeline(BasePix2PixPipeline):
         discriminator_mouth: Optional["FacialComponentDiscriminator"] = None,
     ):
         self.config: "FacePix2PixConfig" = config
+        self.generator_model: "FaceGeneratorModel"
         self.discriminator_left_eye = discriminator_left_eye
         self.discriminator_right_eye = discriminator_right_eye
         self.discriminator_mouth = discriminator_mouth
@@ -303,7 +305,7 @@ class FaceGFPGANPipeline(GFPGANPipeline, FacePix2PixPipeline):
     def __init__(
         self,
         config: "FaceGFPGANConfig",
-        generator_model: "nn.Module",
+        generator_model: "FaceGeneratorModel",
         discriminator_model: "StyleGAN2Discriminator",
         device: Union[str, torch.device],
         discriminator_left_eye: Optional["FacialComponentDiscriminator"] = None,
@@ -332,7 +334,7 @@ class FacePix2PixHDPipeline(Pix2PixHDPipeline, FacePix2PixPipeline):
     def __init__(
         self,
         config: "FacePix2PixHDConfig",
-        generator_model: "nn.Module",
+        generator_model: "FaceGeneratorModel",
         discriminator_model: "MultiscaleDiscriminator",
         device: Union[str, torch.device],
         discriminator_left_eye: Optional["FacialComponentDiscriminator"] = None,
@@ -361,7 +363,7 @@ class FaceSpadePipeline(Pix2PixHDPipeline, FacePix2PixPipeline):
     def __init__(
         self,
         config: "FaceSpadeConfig",
-        generator_model: "nn.Module",
+        generator_model: "FaceGeneratorModel",
         discriminator_model: "MultiscaleDiscriminator",
         device: Union[str, torch.device],
         discriminator_left_eye: Optional["FacialComponentDiscriminator"] = None,

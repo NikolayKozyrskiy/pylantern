@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from matches.shortcuts.optimizer import LRSchedulerWrapper, SchedulerScopeType
 from torch.nn import Module
@@ -11,12 +11,21 @@ from pylantern.tasks.gan.pix2pix.configs.general.spade_config import SpadeConfig
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import FacialComponentDiscriminator
+    from pylantern.tasks.gan.pix2pix.models import (
+        FaceGeneratorInferenceModel,
+        FaceGeneratorModel,
+    )
 
 
 class FacePix2PixConfig(BasePix2PixConfig):
     eye_bbox_enlarge_ratio: float = 1.5
     eye_roi_relative_size: float = 0.15625
     mouth_roi_relative_size: float = 0.234375
+
+    def generator_model(
+        self, *args, **kwargs
+    ) -> Union["FaceGeneratorModel", "FaceGeneratorInferenceModel"]:
+        raise NotImplementedError
 
     def discriminator_left_eye_model(
         self, **kwargs

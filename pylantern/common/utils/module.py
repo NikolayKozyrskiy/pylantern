@@ -7,14 +7,16 @@ from torch.nn import Module
 
 
 def to_device(
-    obj: Union[Module, torch.Tensor, None], device: Union[str, torch.device]
+    obj: Union[Module, torch.Tensor, None], device: Union[str, torch.device, None]
 ) -> Union[Module, torch.Tensor, None]:
-    if obj is not None:
+    if obj is not None and device is not None:
         obj = obj.to(device)
     return obj
 
 
-def remove_module_from_state_dict(state_dict: dict) -> dict:
+def remove_module_from_state_dict(state_dict: Optional[dict]) -> Optional[dict]:
+    if state_dict is None:
+        return None
     for k, v in deepcopy(state_dict).items():
         if k.startswith("module."):
             state_dict[k[7:]] = v
@@ -30,10 +32,10 @@ def set_requires_grad(module: Optional[Module], value: bool = False) -> Module:
 
 
 def model_eval(
-    model: Module, checkpoint: Optional[dict] = None, requires_grad: bool = False
+    model: Module, state_dict: Optional[dict] = None, requires_grad: bool = False
 ) -> Module:
-    if checkpoint is not None:
-        model.load_state_dict(checkpoint)
+    if state_dict is not None:
+        model.load_state_dict(state_dict)
     model.eval()
     if not requires_grad:
         model = set_requires_grad(model, value=False)
