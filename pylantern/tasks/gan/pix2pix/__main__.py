@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Optional
 
 import typer
 
@@ -12,6 +11,26 @@ from pylantern.tasks.gan.pix2pix.configs import (
     FaceSpadeConfig,
     GFPGANConfig,
     Pix2PixHDConfig,
+)
+from pylantern.tasks.gan.pix2pix.models.jit import (
+    jit_script_face_generator_inference_model,
+    jit_script_face_generator_model,
+    jit_script_generator_inference_model,
+    jit_script_generator_model,
+)
+from pylantern.tasks.gan.pix2pix.models.stats import (
+    face_generator_inference_model_jit_speed_test,
+    face_generator_inference_model_module_speed_test,
+    face_generator_inference_model_stats,
+    face_generator_model_jit_speed_test,
+    face_generator_model_module_speed_test,
+    face_generator_model_stats,
+    generator_inference_model_jit_speed_test,
+    generator_inference_model_module_speed_test,
+    generator_inference_model_stats,
+    generator_model_jit_speed_test,
+    generator_model_module_speed_test,
+    generator_model_stats,
 )
 from pylantern.tasks.gan.pix2pix.train_loops.face import (
     test_face_gfpgan_fn,
@@ -274,44 +293,190 @@ def run_test_face_spade(
 
 
 @app.command()
-def run_module_speed_test(
+def run_generator_model_module_speed_test(
     config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
     logdir: Path = typer.Option(None, "--logdir", "-l"),
     repeats: int = typer.Option(10000, "--repeats", "-r"),
 ):
-    module_speed_test_routine(
+    generator_model_module_speed_test(
         config_path=config_path,
-        config_cls=DeepfakeConfig,
         logdir=logdir,
         repeats=repeats,
     )
 
 
 @app.command()
-def run_jit_speed_test(
+def run_generator_model_jit_speed_test(
     config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
     logdir: Path = typer.Option(None, "--logdir", "-l"),
-    checkpoint: str = typer.Option("best", "--checkpoint", "-cpt"),
+    checkpoint: str = typer.Option("best", "-cpt", "--checkpoint"),
     repeats: int = typer.Option(10000, "--repeats", "-r"),
 ):
-    jit_speed_test_routine(
+    generator_model_jit_speed_test(
         config_path=config_path,
-        config_cls=DeepfakeConfig,
         logdir=logdir,
-        checkpoint=checkpoint,
+        checkpoint_name=checkpoint,
         repeats=repeats,
     )
 
 
 @app.command()
-def run_model_stats(
+def run_generator_model_stats(
     config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
     logdir: Path = typer.Option(None, "--logdir", "-l"),
 ):
-    model_stats_routine(
+    generator_model_stats(config_path=config_path, logdir=logdir)
+
+
+@app.command()
+def run_generator_inference_model_module_speed_test(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+    repeats: int = typer.Option(10000, "--repeats", "-r"),
+):
+    generator_inference_model_module_speed_test(
         config_path=config_path,
-        config_cls=DeepfakeConfig,
         logdir=logdir,
+        repeats=repeats,
+    )
+
+
+@app.command()
+def run_generator_inference_model_jit_speed_test(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+    checkpoint: str = typer.Option("best", "-cpt", "--checkpoint"),
+    repeats: int = typer.Option(10000, "--repeats", "-r"),
+):
+    generator_inference_model_jit_speed_test(
+        config_path=config_path,
+        logdir=logdir,
+        checkpoint_name=checkpoint,
+        repeats=repeats,
+    )
+
+
+@app.command()
+def run_generator_inference_model_stats(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+):
+    generator_inference_model_stats(config_path=config_path, logdir=logdir)
+
+
+@app.command()
+def run_face_generator_model_module_speed_test(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+    repeats: int = typer.Option(10000, "--repeats", "-r"),
+):
+    face_generator_model_module_speed_test(
+        config_path=config_path,
+        logdir=logdir,
+        repeats=repeats,
+    )
+
+
+@app.command()
+def run_face_generator_model_jit_speed_test(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+    checkpoint: str = typer.Option("best", "-cpt", "--checkpoint"),
+    repeats: int = typer.Option(10000, "--repeats", "-r"),
+):
+    face_generator_model_jit_speed_test(
+        config_path=config_path,
+        logdir=logdir,
+        checkpoint_name=checkpoint,
+        repeats=repeats,
+    )
+
+
+@app.command()
+def run_face_generator_model_stats(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+):
+    face_generator_model_stats(config_path=config_path, logdir=logdir)
+
+
+@app.command()
+def run_face_generator_inference_model_module_speed_test(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+    repeats: int = typer.Option(10000, "--repeats", "-r"),
+):
+    face_generator_inference_model_module_speed_test(
+        config_path=config_path,
+        logdir=logdir,
+        repeats=repeats,
+    )
+
+
+@app.command()
+def run_face_generator_inference_model_jit_speed_test(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+    checkpoint: str = typer.Option("best", "-cpt", "--checkpoint"),
+    repeats: int = typer.Option(10000, "--repeats", "-r"),
+):
+    face_generator_inference_model_jit_speed_test(
+        config_path=config_path,
+        logdir=logdir,
+        checkpoint_name=checkpoint,
+        repeats=repeats,
+    )
+
+
+@app.command()
+def run_face_generator_inference_model_stats(
+    config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
+    logdir: Path = typer.Option(None, "--logdir", "-l"),
+):
+    face_generator_inference_model_stats(config_path=config_path, logdir=logdir)
+
+
+@app.command()
+def run_jit_script_generator_model(
+    config_path: Path = typer.Option(Path("./config.py"), "-c", "--config-path"),
+    checkpoint_path: str = typer.Option(Path("./best.pt"), "-cpt", "--checkpoint-path"),
+):
+    jit_script_generator_model(
+        config_path=config_path,
+        checkpoint_path=checkpoint_path,
+    )
+
+
+@app.command()
+def run_jit_script_generator_inference_model(
+    config_path: Path = typer.Option(Path("./config.py"), "-c", "--config-path"),
+    checkpoint_path: str = typer.Option(Path("./best.pt"), "-cpt", "--checkpoint-path"),
+):
+    jit_script_generator_inference_model(
+        config_path=config_path,
+        checkpoint_path=checkpoint_path,
+    )
+
+
+@app.command()
+def run_jit_script_face_generator_model(
+    config_path: Path = typer.Option(Path("./config.py"), "-c", "--config-path"),
+    checkpoint_path: str = typer.Option(Path("./best.pt"), "-cpt", "--checkpoint-path"),
+):
+    jit_script_face_generator_model(
+        config_path=config_path,
+        checkpoint_path=checkpoint_path,
+    )
+
+
+@app.command()
+def run_jit_script_face_generator_inference_model(
+    config_path: Path = typer.Option(Path("./config.py"), "-c", "--config-path"),
+    checkpoint_path: str = typer.Option(Path("./best.pt"), "-cpt", "--checkpoint-path"),
+):
+    jit_script_face_generator_inference_model(
+        config_path=config_path,
+        checkpoint_path=checkpoint_path,
     )
 
 

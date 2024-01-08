@@ -17,6 +17,7 @@ def module_speed_test(
     inputs: Union[Tensor, List[Tensor], Dict[str, Tensor]],
     input_sizes: Union[List[int], List[List[int]]],
     repeats: int = 10000,
+    postfix: str = "",
 ) -> None:
     starter = torch.cuda.Event(enable_timing=True)
     ender = torch.cuda.Event(enable_timing=True)
@@ -41,7 +42,7 @@ def module_speed_test(
     )
     print(res_str)
     mkdir(logdir)
-    dst = f"{logdir}/inference_speed__{input_sizes}.txt"
+    dst = f"{logdir}/inference_speed_{postfix}__{input_sizes}.txt"
     dump_txt(res_str, dst)
     return None
 
@@ -51,11 +52,12 @@ def jit_speed_test(
     logdir: Path,
     inputs: Union[Tensor, List[Tensor], Dict[str, Tensor]],
     input_sizes: Union[List[int], List[List[int]]],
-    checkpoint: str = "best",
+    checkpoint_name: str = "best",
     repeats: int = 10000,
+    postfix: str = "",
 ) -> None:
     device = get_device()
-    model_path = f"{logdir}/{checkpoint}.pt"
+    model_path = f"{logdir}/{checkpoint_name}.pt"
     model = torch.jit.load(model_path, map_location=device)
     model.eval()
 
@@ -81,16 +83,17 @@ def jit_speed_test(
         + f"\n\tFPS: {1 / timings.mean()}"
     )
     print(res_str)
-    dst = f"{logdir}/inference_speed_jit__{input_sizes}.txt"
+    dst = f"{logdir}/inference_speed_jit_{postfix}__{input_sizes}.txt"
     dump_txt(res_str, dst)
     return None
 
 
 def model_stats(
     logdir: Path,
+    model: nn.Module,
     inputs: Dict[str, Tensor],
     input_sizes: Union[List[int], List[List[int]]],
-    model: nn.Module,
+    postfix: str = "",
 ) -> None:
     device = get_device()
     model = model.eval()
@@ -115,6 +118,6 @@ def model_stats(
     )
     print(res_str)
     mkdir(logdir)
-    dst = f"{logdir}/model_stats__{input_sizes}.txt"
+    dst = f"{logdir}/model_stats_{postfix}__{input_sizes}.txt"
     dump_txt(res_str, dst)
     return None
