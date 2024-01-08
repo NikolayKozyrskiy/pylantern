@@ -4,16 +4,16 @@ from typing import Callable, Optional, Type
 from matches.accelerators import DDPAccelerator, VanillaAccelerator
 from matches.loop import Loop
 
-from .common.utils import (
-    DevMode,
+from pylantern.common.train_utils import DevMode
+from pylantern.common.utils import (
     copy_config,
     copy_config_generator,
     prepare_comment,
     prepare_logdir,
     wrap_tqdm,
 )
-from .config import BaseConfig, dump_config_dict, load_config
-from .config_generator import (
+from pylantern.config import BaseConfig, dump_config_dict, load_config
+from pylantern.config_generator import (
     GENERATOR_SUMMARY_FILE,
     ConfigGenerator,
     ConfigGeneratorManager,
@@ -83,7 +83,7 @@ def train_config_generator_routine(
     config_generator_manager.finalize(root_log_dir)
 
 
-def infer_routine(
+def test_routine(
     config_path: Path,
     config_cls: Type[BaseConfig],
     infer_fn: Callable,
@@ -110,7 +110,7 @@ def infer_routine(
     )
 
 
-def infer_config_generator_routine(
+def test_config_generator_routine(
     config_generator_path: Path,
     infer_fn: Callable,
     root_log_dir: Optional[Path] = None,

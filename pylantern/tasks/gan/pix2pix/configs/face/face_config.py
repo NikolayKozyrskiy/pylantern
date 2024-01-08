@@ -4,7 +4,10 @@ from matches.shortcuts.optimizer import LRSchedulerWrapper, SchedulerScopeType
 from torch.nn import Module
 from torch.optim import Adam, Optimizer
 
-from .. import BasePix2PixConfig, GFPGANConfig, Pix2PixHDConfig, SpadeConfig
+from pylantern.tasks.gan.pix2pix.configs.config import BasePix2PixConfig
+from pylantern.tasks.gan.pix2pix.configs.general.gfpgan_config import GFPGANConfig
+from pylantern.tasks.gan.pix2pix.configs.general.pix2pixhd_config import Pix2PixHDConfig
+from pylantern.tasks.gan.pix2pix.configs.general.spade_config import SpadeConfig
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import FacialComponentDiscriminator

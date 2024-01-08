@@ -1,7 +1,8 @@
+from .config import BasePix2PixConfig
 from .face import (
     FaceGFPGANConfig,
     FacePix2PixConfig,
     FacePix2PixHDConfig,
     FaceSpadeConfig,
 )
-from .general import BasePix2PixConfig, GFPGANConfig, Pix2PixHDConfig, SpadeConfig
+from .general import GFPGANConfig, Pix2PixHDConfig, SpadeConfig

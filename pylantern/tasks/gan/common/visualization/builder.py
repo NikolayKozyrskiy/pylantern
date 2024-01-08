@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 if TYPE_CHECKING:
-    from pylantern.tasks.gan.pix2pix.pipelines.general.pipeline import (
+    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import (
         BasePix2PixPipeline,
     )
 

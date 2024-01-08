@@ -10,11 +10,11 @@ from torchvision.ops import roi_align
 from pylantern.common.constants import ARCFACE_DST_KPS
 from pylantern.common.nn.functional import atm_arcface
 from pylantern.common.utils import to_device
-from pylantern.tasks.gan.pix2pix.pipelines import (
-    BasePix2PixPipeline,
-    GFPGANPipeline,
+from pylantern.tasks.gan.pix2pix.pipelines.general.gfpgan_pipeline import GFPGANPipeline
+from pylantern.tasks.gan.pix2pix.pipelines.general.pix2pixhd_pipeline import (
     Pix2PixHDPipeline,
 )
+from pylantern.tasks.gan.pix2pix.pipelines.pipeline import BasePix2PixPipeline
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import (

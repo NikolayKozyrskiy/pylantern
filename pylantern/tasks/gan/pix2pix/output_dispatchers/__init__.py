@@ -4,8 +4,5 @@ from .face import (
     FacePix2PixOutputDispatcher,
     FaceSpadeOutputDispatcher,
 )
-from .general import (
-    BasePix2PixOutputDispatcher,
-    GFPGANOutputDispatcher,
-    Pix2PixHDOutputDispatcher,
-)
+from .general import GFPGANOutputDispatcher, Pix2PixHDOutputDispatcher
+from .output_dispatcher import BasePix2PixOutputDispatcher

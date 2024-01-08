@@ -139,7 +139,7 @@ def train_baseline_pix2pix_fn(
     loop.run(_train)
 
 
-def infer_baseline_pix2pix_fn(
+def test_baseline_pix2pix_fn(
     loop: Loop,
     config: "BasePix2PixConfig",
     checkpoint: str = "best",

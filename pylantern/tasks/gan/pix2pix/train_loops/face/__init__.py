@@ -1,3 +1,3 @@
-from .face_gfpgan_fns import infer_face_gfpgan_fn, train_face_gfpgan_fn
-from .face_pix2pixhd_fns import infer_face_gfpgan_fn, train_face_pix2pixhd_fn
-from .face_spade_fns import infer_face_spade_fn, train_face_spade_fn
+from .face_gfpgan_fns import test_face_gfpgan_fn, train_face_gfpgan_fn
+from .face_pix2pixhd_fns import test_face_pix2pixhd_fn, train_face_pix2pixhd_fn
+from .face_spade_fns import test_face_spade_fn, train_face_spade_fn

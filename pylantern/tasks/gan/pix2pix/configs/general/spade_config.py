@@ -1,4 +1,4 @@
-from . import Pix2PixHDConfig
+from pylantern.tasks.gan.pix2pix.configs.general.pix2pixhd_config import Pix2PixHDConfig
 
 
 class SpadeConfig(Pix2PixHDConfig):

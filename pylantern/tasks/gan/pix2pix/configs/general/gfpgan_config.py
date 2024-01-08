@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence
+from typing import Sequence
 
 from pylantern.model_zoo.gfpgan import (
     GFPGANv1,
@@ -7,8 +7,7 @@ from pylantern.model_zoo.gfpgan import (
     gfpgan_generator,
     stylegan2_discriminator,
 )
-
-from . import BasePix2PixConfig
+from pylantern.tasks.gan.pix2pix.configs.config import BasePix2PixConfig
 
 
 class GFPGANConfig(BasePix2PixConfig):
@@ -31,9 +30,7 @@ class GFPGANConfig(BasePix2PixConfig):
             arch="orig",
             predict_mask=self.predict_mask,
             out_size=self.image_size[0],
-            decoder_load_path=Path(
-                "_d/gfpgan/weights/StyleGAN2_512_Cmul1_FFHQ_B12G4_scratch_800k.pth"
-            ),
+            decoder_load_path=None,  # Path("_d/gfpgan/weights/StyleGAN2_512_Cmul1_FFHQ_B12G4_scratch_800k.pth"),
             fix_decoder=self.fix_decoder,
             num_style_feat=self.num_style_feat,
             channel_multiplier=self.channel_multiplier,

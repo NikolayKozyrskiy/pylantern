@@ -8,10 +8,9 @@ from .face import (
     face_spade_pipeline_from_config,
 )
 from .general import (
-    BasePix2PixPipeline,
     GFPGANPipeline,
     Pix2PixHDPipeline,
-    base_pix2pix_pipeline_from_config,
     gfpgan_pipeline_from_config,
     pix2pixhd_pipeline_from_config,
 )
+from .pipeline import BasePix2PixPipeline, base_pix2pix_pipeline_from_config

@@ -6,7 +6,6 @@ from typing import Callable, Mapping, Optional, Sequence, Union
 
 import h5py
 import numpy as np
-import torch
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import Dataset
 

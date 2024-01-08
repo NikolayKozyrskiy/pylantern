@@ -7,8 +7,9 @@ from matches.loop import Loop
 from pylantern.tasks.gan.pix2pix.criterions.general.pix2pixhd_loss import (
     compute_pix2pix_hd_mse,
 )
-
-from . import BasePix2PixOutputDispatcher
+from pylantern.tasks.gan.pix2pix.output_dispatchers.output_dispatcher import (
+    BasePix2PixOutputDispatcher,
+)
 
 if TYPE_CHECKING:
     from pylantern.tasks.gan.pix2pix.configs import Pix2PixHDConfig

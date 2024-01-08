@@ -2,7 +2,6 @@ import json
 import os
 import pickle
 import sys
-from enum import Enum
 from pathlib import Path
 from shutil import copy
 from typing import (
@@ -18,7 +17,6 @@ from typing import (
     Union,
 )
 
-
 import torch
 import tqdm.auto as tqdm
 from ignite import distributed as idist
@@ -28,12 +26,6 @@ from tqdm.contrib.concurrent import thread_map
 
 if TYPE_CHECKING:
     from pylantern import BaseConfig
-
-
-class DevMode(str, Enum):
-    DISABLED = "disabled"
-    SHORT = "short"
-    OVERFIT_BATCH = "overfit-batch"
 
 
 class attrdict(dict):

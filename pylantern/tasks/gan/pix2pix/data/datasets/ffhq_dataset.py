@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Mapping, Optional, Sequence, Union
 
@@ -8,7 +7,10 @@ import numpy as np
 import torch
 from albumentations.pytorch import ToTensorV2
 
-from .image_mask_folders import ImageMaskFoldersDataset, change_dict_key
+from pylantern.tasks.gan.pix2pix.data.datasets.image_mask_folders import (
+    ImageMaskFoldersDataset,
+    change_dict_key,
+)
 
 
 class FFHQDataset(ImageMaskFoldersDataset):

@@ -5,7 +5,9 @@ import torch.nn.functional as F
 from basicsr.losses.gan_loss import r1_penalty
 from matches.loop import Loop
 
-from . import BasePix2PixOutputDispatcher
+from pylantern.tasks.gan.pix2pix.output_dispatchers.output_dispatcher import (
+    BasePix2PixOutputDispatcher,
+)
 
 if TYPE_CHECKING:
     from pylantern.tasks.gan.pix2pix.configs import GFPGANConfig

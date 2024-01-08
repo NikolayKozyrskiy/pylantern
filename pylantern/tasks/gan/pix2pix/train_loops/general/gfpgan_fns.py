@@ -191,7 +191,7 @@ def train_gfpgan_fn(
     loop.run(_train)
 
 
-def infer_gfpgan_fn(
+def test_gfpgan_fn(
     loop: "Loop",
     config: "GFPGANConfig",
     checkpoint: str = "best",

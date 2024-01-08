@@ -282,7 +282,7 @@ def train_face_spade_fn(
     loop.run(_train)
 
 
-def infer_face_spade_fn(
+def test_face_spade_fn(
     loop: Loop,
     config: "FaceSpadeConfig",
     checkpoint: str = "best",

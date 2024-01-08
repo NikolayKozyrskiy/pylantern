@@ -325,7 +325,7 @@ def train_face_gfpgan_fn(
     loop.run(_train)
 
 
-def infer_face_gfpgan_fn(
+def test_face_gfpgan_fn(
     loop: "Loop",
     config: "FaceGFPGANConfig",
     checkpoint: str = "best",

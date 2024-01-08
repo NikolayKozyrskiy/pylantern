@@ -5,8 +5,7 @@ from matches.shortcuts.dag import graph_node
 from torch import Tensor, nn
 
 from pylantern.common.utils import to_device
-
-from .pipeline import BasePix2PixPipeline
+from pylantern.tasks.gan.pix2pix.pipelines.pipeline import BasePix2PixPipeline
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.pix2pix import MultiscaleDiscriminator

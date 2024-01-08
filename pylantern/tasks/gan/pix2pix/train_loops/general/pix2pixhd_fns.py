@@ -166,7 +166,7 @@ def train_pix2pixhd_fn(
     loop.run(_train)
 
 
-def infer_pix2pixhd_fn(
+def test_pix2pixhd_fn(
     loop: Loop,
     config: "Pix2PixHDConfig",
     checkpoint: str = "best",

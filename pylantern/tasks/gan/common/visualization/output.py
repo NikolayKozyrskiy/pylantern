@@ -17,7 +17,7 @@ from pylantern.common.utils.img import save_img, tensor_to_image
 from .builder import create_preview_images
 
 if TYPE_CHECKING:
-    from pylantern.tasks.gan.pix2pix.pipelines.general.pipeline import (
+    from pylantern.tasks.gan.pix2pix.pipelines.pipeline import (
         BasePix2PixPipeline,
     )
 

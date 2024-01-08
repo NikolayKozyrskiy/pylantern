@@ -284,7 +284,7 @@ def train_face_pix2pixhd_fn(
     loop.run(_train)
 
 
-def infer_face_pix2pixhd_fn(
+def test_face_pix2pixhd_fn(
     loop: Loop,
     config: "FacePix2PixHDConfig",
     checkpoint: str = "best",

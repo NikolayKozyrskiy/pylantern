@@ -156,8 +156,6 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         ).detach()
         return (1 - F.cosine_similarity(pred, gt, dim=-1)).mean()
 
-    
-
     def loss__bce_with_logits_mask(
         self, pipeline: "BasePix2PixPipeline", loop: "Loop", *args, **kwargs
     ):
@@ -251,5 +249,3 @@ class BasePix2PixOutputDispatcher(BaseOutputDispatcher):
         )
         psnr = 10 * torch.log10(1.0 / mse).mean()
         return psnr
-
-    

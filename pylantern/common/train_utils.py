@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+from enum import Enum
 from pathlib import Path
 from typing import Any, List, Optional, Tuple
 
@@ -9,6 +10,12 @@ from torch.utils.data import DataLoader
 
 from pylantern.output_dispatcher import BaseOutputDispatcher, filter_and_uncollate
 from pylantern.pipeline import BasePipeline
+
+
+class DevMode(str, Enum):
+    DISABLED = "disabled"
+    SHORT = "short"
+    OVERFIT_BATCH = "overfit-batch"
 
 
 @single_process_only()
@@ -57,7 +64,9 @@ def predict_dataloader(
                 )
                 metrics.extend(
                     filter_and_uncollate(
-                        output_dispatcher.compute_metrics(pipeline, loop).computed_values,
+                        output_dispatcher.compute_metrics(
+                            pipeline, loop
+                        ).computed_values,
                         pipeline,
                     )
                 )

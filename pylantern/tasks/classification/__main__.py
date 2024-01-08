@@ -2,10 +2,10 @@ from pathlib import Path
 
 import typer
 
-from pylantern.common.utils import DevMode
+from pylantern.common.train_utils import DevMode
 from pylantern.main_routines import (
-    infer_config_generator_routine,
-    infer_routine,
+    test_config_generator_routine,
+    test_routine,
     train_config_generator_routine,
     train_routine,
 )
@@ -60,7 +60,7 @@ def infer(
     output_name: str = typer.Option(None, "--output-name", "-o"),
     gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
 ):
-    infer_routine(
+    test_routine(
         config_path=config_path,
         config_cls=ClassificationConfig,
         infer_fn=infer_fn,
@@ -83,7 +83,7 @@ def infer_config_generator(
     output_name: str = typer.Option(None, "--output-name", "-o"),
     gpus: str = typer.Option(None, "--gpus", "--gpu", "-g"),
 ):
-    infer_config_generator_routine(
+    test_config_generator_routine(
         config_generator_path=config_generator_path,
         infer_fn=infer_fn,
         root_log_dir=root_log_dir,

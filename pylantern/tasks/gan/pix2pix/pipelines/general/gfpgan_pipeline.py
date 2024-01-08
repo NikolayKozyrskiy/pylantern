@@ -8,8 +8,7 @@ from torch.nn import functional as F
 from typing_extensions import override
 
 from pylantern.common.utils import to_device
-
-from .. import BasePix2PixPipeline
+from pylantern.tasks.gan.pix2pix.pipelines.pipeline import BasePix2PixPipeline
 
 if TYPE_CHECKING:
     from pylantern.model_zoo.gfpgan import StyleGAN2Discriminator

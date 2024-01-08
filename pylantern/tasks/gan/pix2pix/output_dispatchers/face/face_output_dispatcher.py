@@ -8,10 +8,14 @@ from pylantern.common.nn.functional import gram_matrix, mse_reduction
 from pylantern.tasks.gan.pix2pix.criterions.face import (
     face_complex_criterions as face_cc,
 )
-from pylantern.tasks.gan.pix2pix.output_dispatchers.general import (
-    BasePix2PixOutputDispatcher,
+from pylantern.tasks.gan.pix2pix.output_dispatchers.general.gfpgan_output_dispatcher import (
     GFPGANOutputDispatcher,
+)
+from pylantern.tasks.gan.pix2pix.output_dispatchers.general.pix2pixhd_output_dispatcher import (
     Pix2PixHDOutputDispatcher,
+)
+from pylantern.tasks.gan.pix2pix.output_dispatchers.output_dispatcher import (
+    BasePix2PixOutputDispatcher,
 )
 
 if TYPE_CHECKING:
