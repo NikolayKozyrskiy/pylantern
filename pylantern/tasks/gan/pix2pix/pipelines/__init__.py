@@ -13,5 +13,5 @@ from .general import (
     Pix2PixHDPipeline,
     base_pix2pix_pipeline_from_config,
     gfpgan_pipeline_from_config,
-    pix2pix_pipeline_from_config,
+    pix2pixhd_pipeline_from_config,
 )

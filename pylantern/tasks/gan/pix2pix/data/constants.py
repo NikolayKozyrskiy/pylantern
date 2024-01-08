@@ -2,4 +2,5 @@ from enum import Enum
 
 
 class DatasetType(str, Enum):
-    IMAGE_FOLDER = "image_folder"
+    IMAGE_MASK_FOLDERS = "image_mask_folders"
+    FFHQ = "ffhq"

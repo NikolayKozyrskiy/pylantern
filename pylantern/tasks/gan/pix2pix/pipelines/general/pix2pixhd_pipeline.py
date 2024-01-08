@@ -71,7 +71,7 @@ class Pix2PixHDPipeline(BasePix2PixPipeline):
         return pred
 
 
-def pix2pix_pipeline_from_config(
+def pix2pixhd_pipeline_from_config(
     config: "Pix2PixHDConfig",
     device: Union[str, torch.device],
 ) -> Pix2PixHDPipeline:

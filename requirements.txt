@@ -11,6 +11,12 @@ wandb>=0.13.5
 notebook
 matplotlib
 albumentations==1.1.0
+insightface>=0.7.3
+basicsr>=1.4.2
+facexlib>=0.2.5
+lpips
+dreamsim==0.1.3
+git+https://github.com/nupurkmr9/vision-aided-gan.git
 kornia==0.7.1
 pandas==1.4.4
 imageio==2.19.3

@@ -17,13 +17,13 @@ from torch.optim import Adam, Optimizer
 
 from pylantern.common.constants import DEFAULT_IMG_MEAN, DEFAULT_IMG_STD
 from pylantern.config import BaseConfig
+from pylantern.tasks.gan.common.visualization.builder import PreviewImageConfig
+from pylantern.tasks.gan.common.visualization.output import save_previews
+from pylantern.tasks.gan.pix2pix.data.constants import DatasetType
 from pylantern.tasks.gan.pix2pix.visualization.base import (
     original_image_dst_base,
     pred_image_base,
 )
-from pylantern.tasks.gan.common.visualization.builder import PreviewImageConfig
-from pylantern.tasks.gan.common.visualization.output import save_previews
-from pylantern.tasks.gan.pix2pix.data.constants import DatasetType
 
 if TYPE_CHECKING:
     from pylantern.tasks.gan.pix2pix.pipelines import BasePix2PixPipeline
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 class BasePix2PixConfig(BaseConfig):
     predict_mask: bool = False
 
-    dataset_type: DatasetType = DatasetType.IMAGE_FOLDER
+    dataset_type: DatasetType = DatasetType.IMAGE_MASK_FOLDERS
     attrs_to_load: Union[Sequence[str], Mapping[str, str]] = {
         "image": "imgs__infa_aligned.png",  # this is src image
         "image_dst": "imgs__inswapper__gfpganV14__sergey.png",

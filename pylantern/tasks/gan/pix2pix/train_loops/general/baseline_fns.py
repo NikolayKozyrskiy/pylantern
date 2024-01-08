@@ -14,17 +14,22 @@ from pylantern.common.utils import get_device
 from pylantern.common.utils.metrics_logging import consume_metric, log_optimizer_lrs
 from pylantern.config import load_config
 from pylantern.tasks.gan.common.visualization.wandb import log_images_to_wandb
-
-from ..configs import BasePix2PixConfig
-from ..data.dataloaders import get_train_loader, get_validation_loader
-from ..output_dispatchers.output_dispatcher import GanPix2PixOutputDispatcher
-from ..pipelines import BasePix2PixPipeline, base_pix2pix_pipeline_from_config
+from pylantern.tasks.gan.pix2pix.configs import BasePix2PixConfig
+from pylantern.tasks.gan.pix2pix.data.dataloaders import (
+    get_train_loader,
+    get_validation_loader,
+)
+from pylantern.tasks.gan.pix2pix.output_dispatchers import BasePix2PixOutputDispatcher
+from pylantern.tasks.gan.pix2pix.pipelines import (
+    BasePix2PixPipeline,
+    base_pix2pix_pipeline_from_config,
+)
 
 warnings.filterwarnings("ignore", module="torch.optim.lr_scheduler")
 warnings.simplefilter("ignore")
 
 
-def train_baseline_fn(
+def train_baseline_pix2pix_fn(
     loop: Loop,
     config_path: Path,
     config_cls: Type[BasePix2PixConfig],
@@ -40,14 +45,16 @@ def train_baseline_fn(
 
     pipeline: "BasePix2PixPipeline" = base_pix2pix_pipeline_from_config(config, device)
     config.preprocess(loop, pipeline)
-    pipeline.face_swapper = auto_model(pipeline.face_swapper)
+    pipeline.generator_model = auto_model(pipeline.generator_model)
 
-    out_dispatcher = GanPix2PixOutputDispatcher(config, device=device)
-    optimizer = config.optimizer(pipeline.face_swapper)
-    scheduler = config.scheduler(optimizer)
+    out_dispatcher = BasePix2PixOutputDispatcher(config, device=device)
+    optimizer = config.optimizer_generator(pipeline.generator_model)
+    scheduler = config.scheduler_generator(optimizer)
 
     loop.attach(
-        face_swapper=pipeline.face_swapper, optimizer=optimizer, scheduler=scheduler
+        generator_model=pipeline.generator_model,
+        optimizer=optimizer,
+        scheduler=scheduler,
     )
 
     config.resume(loop, pipeline)
@@ -120,18 +127,19 @@ def train_baseline_fn(
             consume_metric(loop, metrics_valid_d, prefix="valid")
 
         predict_dataloader(
-            loop,
-            pipeline,
-            valid_loader,
-            out_dispatcher,
-            loop.logdir / "valid_infer",
+            loop=loop,
+            pipeline=pipeline,
+            dataloader=valid_loader,
+            output_dispatcher=out_dispatcher,
+            group_losses=None,
+            save_dir=loop.logdir / "valid_infer",
             verbose=True,
         )
 
     loop.run(_train)
 
 
-def infer_baseline_fn(
+def infer_baseline_pix2pix_fn(
     loop: Loop,
     config: "BasePix2PixConfig",
     checkpoint: str = "best",
@@ -140,26 +148,27 @@ def infer_baseline_fn(
 ) -> None:
     device = get_device()
 
-    data_root = config.data_root if data_root is None else data_root
+    data_root = config.root_path if data_root is None else data_root
     output_name = checkpoint if output_name is None else output_name
 
     loader = get_validation_loader(config)
     pipeline: "BasePix2PixPipeline" = base_pix2pix_pipeline_from_config(config, device)
 
-    out_dispatcher = GanPix2PixOutputDispatcher(config=config, device=device)
+    out_dispatcher = BasePix2PixOutputDispatcher(config=config, device=device)
 
-    loop.attach(face_swapper=pipeline.face_swapper)
+    loop.attach(generator_model=pipeline.generator_model)
     loop.state_manager.read_state(
         loop.logdir / f"{checkpoint}.pth", skip_keys=["optimizer", "scheduler"]
     )
 
     def _infer(loop: Loop):
         predict_dataloader(
-            loop,
-            pipeline,
-            loader,
-            out_dispatcher,
-            loop.logdir / output_name,
+            loop=loop,
+            pipeline=pipeline,
+            dataloader=loader,
+            out_dispatcher=out_dispatcher,
+            group_losses=None,
+            save_dir=loop.logdir / output_name,
             verbose=True,
         )
 

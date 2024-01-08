@@ -1,0 +1,3 @@
+from .gfpgan_output_dispatcher import GFPGANOutputDispatcher
+from .output_dispatcher import BasePix2PixOutputDispatcher
+from .pix2pixhd_output_dispatcher import Pix2PixHDOutputDispatcher

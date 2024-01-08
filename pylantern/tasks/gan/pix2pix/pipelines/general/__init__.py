@@ -1,3 +1,3 @@
 from .gfpgan_pipeline import GFPGANPipeline, gfpgan_pipeline_from_config
 from .pipeline import BasePix2PixPipeline, base_pix2pix_pipeline_from_config
-from .pix2pixhd_pipeline import Pix2PixHDPipeline, pix2pix_pipeline_from_config
+from .pix2pixhd_pipeline import Pix2PixHDPipeline, pix2pixhd_pipeline_from_config

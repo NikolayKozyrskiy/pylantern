@@ -1,0 +1,1 @@
+from .pix2pixhd_loss import compute_pix2pix_hd_mse
