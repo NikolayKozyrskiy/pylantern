@@ -31,9 +31,7 @@ def gfpgan_generator(
     arch: str = "orig",
     out_size: int = 512,
     predict_mask: bool = True,
-    decoder_load_path: Union[str, Path, None] = Path(
-        "_d/gfpgan/weights/StyleGAN2_512_Cmul1_FFHQ_B12G4_scratch_800k.pth"
-    ),
+    decoder_load_path: Union[str, Path, None] = None,
     fix_decoder: bool = True,
     num_style_feat: int = 512,
     channel_multiplier: int = 1,

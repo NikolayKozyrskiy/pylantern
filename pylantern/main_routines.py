@@ -4,7 +4,7 @@ from typing import Callable, Optional, Type
 from matches.accelerators import DDPAccelerator, VanillaAccelerator
 from matches.loop import Loop
 
-from pylantern.common.train_utils import DevMode
+from pylantern.common.train_fns import DevMode
 from pylantern.common.utils import (
     copy_config,
     copy_config_generator,

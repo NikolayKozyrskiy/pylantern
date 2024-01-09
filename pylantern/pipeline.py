@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Iterable, Mapping, Union
 
 import torch
 from matches.shortcuts.dag import ComputationGraph
@@ -20,5 +20,5 @@ class BasePipeline(ComputationGraph):
         self.batch = None
 
     @contextmanager
-    def batch_scope(self, batch: Any):
+    def batch_scope(self, batch: Union[Mapping, Iterable]):
         raise NotImplementedError()

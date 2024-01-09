@@ -10,7 +10,7 @@ from matches.loop import Loop
 from matches.shortcuts.optimizer import scheduler_step_batch, scheduler_step_epoch
 from matches.utils import seed_everything, setup_cudnn_reproducibility
 
-from pylantern.common.train_utils import predict_dataloader
+from pylantern.common.train_fns import predict_dataloader
 from pylantern.common.utils import get_device
 from pylantern.common.utils.metrics_logging import (
     consume_metric,

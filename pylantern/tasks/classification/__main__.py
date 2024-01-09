@@ -2,7 +2,7 @@ from pathlib import Path
 
 import typer
 
-from pylantern.common.train_utils import DevMode
+from pylantern.common.train_fns import DevMode
 from pylantern.main_routines import (
     test_config_generator_routine,
     test_routine,
