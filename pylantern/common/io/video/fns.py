@@ -1,12 +1,15 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple, Union
 
+import ffmpeg
 import imageio_ffmpeg as iffmpeg
 import numpy as np
+from ffmpeg import Stream
 
-from ..utils import mkdir
+from pylantern.common.constants import FFMPEG_BIN
+from pylantern.common.utils import mkdir
 
 # Look here for inspiration:
 # https://github.com/xinntao/Real-ESRGAN/blob/master/inference_realesrgan_video.py
@@ -15,34 +18,65 @@ FFMPEG_DIGITS_NUM = 6
 FPS_LIST = np.array([24.0, 30.0, 60.0, 120.0, 240.0])
 
 
-def get_fps(video_path: Path) -> float:
+class VideoMeta(NamedTuple):
+    width: int
+    height: int
+    duration: float
+    frames_num: int
+    audio: Optional["Stream"] = None
+
+    @property
+    def fps(self) -> float:
+        fps = self.frames_num / self.duration
+        return FPS_LIST[abs(FPS_LIST - fps).argmin()]
+
+
+def get_video_meta(video_path: "Path") -> "VideoMeta":
+    probe = ffmpeg.probe(video_path)
+    video_streams = [
+        stream for stream in probe["streams"] if stream["codec_type"] == "video"
+    ]
+    has_audio = any(stream["codec_type"] == "audio" for stream in probe["streams"])
+    frames_num, duration = iffmpeg.count_frames_and_secs(video_path)
+
+    return VideoMeta(
+        width=int(video_streams[0]["width"]),
+        height=int(video_streams[0]["height"]),
+        duration=duration,
+        frames_num=frames_num,
+        audio=ffmpeg.input(video_path).audio if has_audio else None,
+    )
+
+
+def get_fps(video_path: "Path") -> float:
     # return cv2.VideoCapture(str(video_path)).get(cv2.CAP_PROP_FPS)
     frames, secs = iffmpeg.count_frames_and_secs(video_path)
     fps = frames / secs
     return FPS_LIST[abs(FPS_LIST - fps).argmin()]
 
 
-def get_width_height(video_path: Path) -> Tuple[int, int]:
+def get_sub_video(video_path: "Path", num_process: int, process_idx: int) -> "Path":
+    if num_process == 1:
+        return video_path
+    meta = get_video_meta(video_path=video_path)
+    part_time = meta.duration // num_process
+    out_path = mkdir(video_path.parent / f"{video_path.stem}_tmp_chunks")
+    out_path = out_path / f"{process_idx:03d}.mp4"
     cmd = [
-        "ffprobe",
-        "-v",
-        "error",
-        "-select_streams",
-        "v:0",
-        "-show_entries",
-        "stream=width,height",
-        "-of",
-        "csv=s=x:p=0",
-        f"{video_path.resolve()}",
+        FFMPEG_BIN,
+        f"-i {video_path}",
+        "-ss",
+        f"{part_time * process_idx}",
+        f"-to {part_time * (process_idx + 1)}"
+        if process_idx != num_process - 1
+        else "",
+        "-async 1",
+        out_path,
+        "-y",
     ]
-    try:
-        out = subprocess.check_output(cmd)
-    except subprocess.CalledProcessError as err:
-        out = err.output.decode(errors="ignore")
-        raise RuntimeError(
-            "FFMPEG call failed with {}:\n{}".format(err.returncode, out)
-        )
-    return (int(v) for v in out.decode().split("x"))
+
+    subprocess.call(" ".join(cmd), shell=True)
+    return out_path
 
 
 def imgs2video(

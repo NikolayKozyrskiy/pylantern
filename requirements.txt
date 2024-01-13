@@ -8,6 +8,7 @@ tqdm
 future
 pydantic==1.9.0
 wandb>=0.13.5
+ffmpeg-python
 notebook
 matplotlib
 albumentations==1.1.0

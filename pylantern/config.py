@@ -19,10 +19,10 @@ from torch.optim import SGD, Optimizer
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from pylantern.common.utils import dump_json, load_pickle
+from pylantern.common.visualization.image import PreviewImageConfig
 from pylantern.output_dispatcher import CriterionAggregation
 
 if TYPE_CHECKING:
-    from pylantern.common.visualization.image import PreviewImageConfig
     from pylantern.pipeline import BasePipeline
 
 
@@ -57,7 +57,7 @@ class BaseConfig(BaseModel):
     shuffle_train: bool = True
 
     output_config: list[Callable[["BasePipeline", Executor, Path], None]] = []
-    preview_config: list["PreviewImageConfig"] = []
+    preview_config: list[PreviewImageConfig] = []
     log_vis_fns: List[Callable] = []
 
     def optimizer(self, model: Module) -> Optimizer:

@@ -1,4 +1,12 @@
+import os
+
 import numpy as np
+
+FFMPEG_BIN = (
+    os.environ["FFMPEG_BIN"]
+    if os.environ.get("FFMPEG_BIN", None) is not None
+    else "ffmpeg"
+)
 
 ARCFACE_DST_KPS = np.array(
     [
