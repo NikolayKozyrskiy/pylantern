@@ -5,10 +5,11 @@ import ffmpeg
 import numpy as np
 
 from pylantern.common.constants import FFMPEG_BIN
-from pylantern.common.io.video.data import InputVideoData, OutputVideoData
 
 if TYPE_CHECKING:
     from subprocess import Popen
+
+    from pylantern.common.io.video.data import InputVideoData, OutputVideoData
 
 
 class VideoIOManager:
@@ -32,20 +33,20 @@ class VideoIOManager:
         }
 
     @contextmanager
-    def videos_scope(self):
+    def write_scope(self, video_name: Optional[str] = None) -> None:
         try:
-            self._open_streams()
+            if video_name is None:
+                for _video_name in self.write_streams.keys():
+                    self._open_output_video_write_stream(video_name=_video_name)
+            else:
+                self._open_output_video_write_stream(video_name=video_name)
             yield
         finally:
-            self._close_streams()
-
-    @contextmanager
-    def write_scope(self, video_name: str) -> None:
-        try:
-            self._open_output_video_write_stream(video_name=video_name)
-            yield
-        finally:
-            self._close_output_video_write_stream(video_name=video_name)
+            if video_name is None:
+                for _video_name in self.write_streams.keys():
+                    self._close_output_video_write_stream(video_name=_video_name)
+            else:
+                self._close_output_video_write_stream(video_name=video_name)
 
     @contextmanager
     def read_scope(self) -> None:
