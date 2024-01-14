@@ -1,51 +1,13 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
-import ffmpeg
 import imageio_ffmpeg as iffmpeg
-import numpy as np
-from ffmpeg import Stream
 
 from pylantern.common.constants import FFMPEG_BIN
+from pylantern.common.io.video.data import FFMPEG_DIGITS_NUM, FPS_LIST, get_video_meta
 from pylantern.common.utils import mkdir
-
-# Look here for inspiration:
-# https://github.com/xinntao/Real-ESRGAN/blob/master/inference_realesrgan_video.py
-
-FFMPEG_DIGITS_NUM = 6
-FPS_LIST = np.array([24.0, 30.0, 60.0, 120.0, 240.0])
-
-
-class VideoMeta(NamedTuple):
-    width: int
-    height: int
-    duration: float
-    frames_num: int
-    audio: Optional["Stream"] = None
-
-    @property
-    def fps(self) -> float:
-        fps = self.frames_num / self.duration
-        return FPS_LIST[abs(FPS_LIST - fps).argmin()]
-
-
-def get_video_meta(video_path: "Path") -> "VideoMeta":
-    probe = ffmpeg.probe(video_path)
-    video_streams = [
-        stream for stream in probe["streams"] if stream["codec_type"] == "video"
-    ]
-    has_audio = any(stream["codec_type"] == "audio" for stream in probe["streams"])
-    frames_num, duration = iffmpeg.count_frames_and_secs(video_path)
-
-    return VideoMeta(
-        width=int(video_streams[0]["width"]),
-        height=int(video_streams[0]["height"]),
-        duration=duration,
-        frames_num=frames_num,
-        audio=ffmpeg.input(video_path).audio if has_audio else None,
-    )
 
 
 def get_fps(video_path: "Path") -> float:
