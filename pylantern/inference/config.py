@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class BaseInferenceConfig(BaseModel):
     root_path: Path = Path("_d")
+    stage_names: List[str] = []
 
     transforms: list[Callable] = []
     workers_num: int = 4

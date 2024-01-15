@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 import cv2
 import numpy as np
 import torch
-from insightface.app.common import Face
 
 from pylantern.common.utils import get_device
 from pylantern.common.utils.img import (
@@ -31,24 +30,21 @@ class FaceSwapper:
         image_size: Tuple[int, int],
         predict_mask: bool,
         crop_paste_method: "CropPasteMethod",
+        face_segmenter: Optional["FaceSegmenter"] = None,
+        paste_back: bool = True,
     ) -> None:
         self.face_aligner = face_aligner
         self.face_swapper_model = face_swapper_model
         self.image_size = image_size
         self.predict_mask = predict_mask
         self.crop_paste_method = crop_paste_method
+        self.paste_back = paste_back
+        self.face_segmenter = face_segmenter
 
     @torch.no_grad()
     def swap_face(
         self,
-        dst_img: np.ndarray,
-        src_img: Optional[np.ndarray] = None,
-        dst_face: Optional[Face] = None,
-        src_face: Optional[Face] = None,
-        src_face_idx: Optional[int] = None,
-        dst_face_idx: Optional[int] = None,
-        crop_by_bbox: bool = False,
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> FaceSwapData:
@@ -64,6 +60,7 @@ class FaceSwapperINFA(FaceSwapper):
         predict_mask: bool,
         crop_paste_method: "CropPasteMethod",
         face_segmenter: Optional["FaceSegmenter"] = None,
+        paste_back: bool = True,
     ) -> None:
         super().__init__(
             face_aligner=face_aligner,
@@ -71,86 +68,73 @@ class FaceSwapperINFA(FaceSwapper):
             image_size=image_size,
             predict_mask=predict_mask,
             crop_paste_method=crop_paste_method,
+            face_segmenter=face_segmenter,
+            paste_back=paste_back,
         )
-        self.face_segmenter = face_segmenter
 
     @torch.no_grad()
     def swap_face(
         self,
-        dst_img: np.ndarray,
-        src_img: Optional[np.ndarray] = None,
-        dst_face: Optional[Face] = None,
-        src_face: Optional[Face] = None,
-        src_face_idx: Optional[int] = None,
-        dst_face_idx: Optional[int] = None,
-        crop_by_bbox: bool = False,
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> "FaceSwapData":
-        if src_img is None and src_face is None:
+        if swap_data.src_img is None and swap_data.src_face is None:
             raise ValueError("Either src_img or src_face must be non-none")
-        if dst_face is None:
-            dst_face = self.face_aligner.get_face(dst_img, face_idx=dst_face_idx)
-        if src_face is None:
-            src_face = self.face_aligner.get_face(src_img, face_idx=src_face_idx)
-        if dst_face is None or src_face is None:
-            return FaceSwapData(
-                src_img=src_img,
-                dst_img=dst_img,
-                src_face_idx=src_face_idx,
-                dst_face_idx=dst_face_idx,
-                swapped_dst_img=dst_img,
-                swapping_occurred=False,
+        if swap_data.dst_face is None:
+            swap_data.dst_face = self.face_aligner.get_face(
+                img=swap_data.dst_img, face_idx=swap_data.dst_face_idx
             )
+        if swap_data.src_face is None:
+            swap_data.src_face = self.face_aligner.get_face(
+                img=swap_data.src_img, face_idx=swap_data.src_face_idx
+            )
+        if swap_data.dst_face is None or swap_data.src_face is None:
+            swap_data.swapping_occurred = False
+            return swap_data
         if self.predict_mask:
-            swapped_dst_img, transform_matrix = self.face_swapper_model.get(
-                dst_img, dst_face, src_face, paste_back=False
+            (
+                swap_data.swapped_dst_img,
+                swap_data.transform_matrix,
+            ) = self.face_swapper_model.get(
+                img=swap_data.dst_img,
+                target_face=swap_data.dst_face,
+                source_face=swap_data.src_face,
+                paste_back=False,
             )
-            if paste_back:
-                predicted_dst_mask = self.face_segmenter.get_soft_mask(
-                    cv2.resize(
-                        swapped_dst_img, (320, 320), interpolation=cv2.INTER_LANCZOS4
+            if self.paste_back:
+                swap_data.predicted_dst_mask = self.face_segmenter.get_soft_mask(
+                    img=cv2.resize(
+                        swap_data.swapped_dst_img,
+                        (320, 320),
+                        interpolation=cv2.INTER_LANCZOS4,
                     )
                 )
-                predicted_dst_mask = cv2.resize(
-                    predicted_dst_mask, (128, 128), interpolation=cv2.INTER_NEAREST
+                swap_data.predicted_dst_mask = cv2.resize(
+                    swap_data.predicted_dst_mask,
+                    (128, 128),
+                    interpolation=cv2.INTER_NEAREST,
                 )
-                face_data = FaceSwapData(
-                    src_img=src_img,
-                    dst_img=dst_img,
-                    src_face_idx=src_face_idx,
-                    dst_face_idx=dst_face_idx,
-                    transform_matrix=transform_matrix,
-                    predicted_dst_img=swapped_dst_img,
-                    predicted_dst_mask=predicted_dst_mask,
-                    swapping_occurred=True,
+                swap_data.swapped_dst_img = self.face_aligner.paste_back_aligned(
+                    face_swap_data=swap_data
                 )
-                face_data.swapped_dst_img = self.face_aligner.paste_back_aligned(
-                    face_data
-                )
-                return face_data
+                swap_data.swapping_occurred = True
+                return swap_data
         else:
-            if paste_back:
-                swapped_dst_img = self.face_swapper_model.get(
-                    dst_img, dst_face, src_face, paste_back=paste_back
-                )
-                transform_matrix = None
+            res = self.face_swapper_model.get(
+                img=swap_data.dst_img,
+                target_face=swap_data.dst_face,
+                source_face=swap_data.src_face,
+                paste_back=self.paste_back,
+            )
+            if self.paste_back:
+                swap_data.swapped_dst_img = res
+                swap_data.transform_matrix = None
             else:
-                swapped_dst_img, transform_matrix = self.face_swapper_model.get(
-                    dst_img, dst_face, src_face, paste_back=paste_back
-                )
-        return FaceSwapData(
-            src_img=src_img,
-            dst_img=dst_img,
-            src_face=src_face,
-            dst_face=dst_face,
-            src_face_idx=src_face_idx,
-            dst_face_idx=dst_face_idx,
-            transform_matrix=transform_matrix,
-            swapped_dst_img=swapped_dst_img,
-            swapping_occurred=True,
-        )
+                swap_data.swapped_dst_img = res[0]
+                swap_data.transform_matrix = res[1]
+            swap_data.swapping_occurred = True
+        return swap_data
 
 
 class FaceGeneratorSwapper(FaceSwapper):
@@ -162,6 +146,8 @@ class FaceGeneratorSwapper(FaceSwapper):
         image_size: Tuple[int, int],
         predict_mask: bool,
         crop_paste_method: "CropPasteMethod",
+        paste_back: bool = True,
+        face_segmenter: Optional["FaceSegmenter"] = None,
     ) -> None:
         super().__init__(
             face_aligner=face_aligner,
@@ -169,6 +155,8 @@ class FaceGeneratorSwapper(FaceSwapper):
             image_size=image_size,
             predict_mask=predict_mask,
             crop_paste_method=crop_paste_method,
+            face_segmenter=face_segmenter,
+            paste_back=paste_back,
         )
         self.device = device
         self.face_swapper_model.to(device).eval()
@@ -176,27 +164,17 @@ class FaceGeneratorSwapper(FaceSwapper):
     @torch.no_grad()
     def swap_face(
         self,
-        dst_img: Union[np.ndarray, torch.Tensor],
-        src_img: Union[np.ndarray, torch.Tensor, None] = None,
-        dst_face: Optional[Face] = None,
-        src_face: Optional[Face] = None,
-        src_face_idx: Optional[int] = None,
-        dst_face_idx: Optional[int] = None,
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> FaceSwapData:
-        if isinstance(dst_img, torch.Tensor):
-            dst_img = tensor_to_image(dst_img, val_range=(0.0, 1.0), keepdim=False)
+        if isinstance(swap_data.dst_img, torch.Tensor):
+            swap_data.dst_img = tensor_to_image(
+                swap_data.dst_img, val_range=(0.0, 1.0), keepdim=False
+            )
         if self.crop_paste_method == CropPasteMethod.BBOX:
             return self._swap_by_bbox_crop(
-                dst_img=dst_img,
-                src_img=src_img,
-                dst_face=dst_face,
-                src_face=src_face,
-                src_face_idx=src_face_idx,
-                dst_face_idx=dst_face_idx,
-                paste_back=paste_back,
+                swap_data=swap_data,
                 *args,
                 **kwargs,
             )
@@ -205,13 +183,7 @@ class FaceGeneratorSwapper(FaceSwapper):
             CropPasteMethod.INFA_GENERATOR,
         ]:
             return self._swap_by_infa(
-                dst_img=dst_img,
-                src_img=src_img,
-                dst_face=dst_face,
-                src_face=src_face,
-                src_face_idx=src_face_idx,
-                dst_face_idx=dst_face_idx,
-                paste_back=paste_back,
+                swap_data=swap_data,
                 *args,
                 **kwargs,
             )
@@ -223,101 +195,69 @@ class FaceGeneratorSwapper(FaceSwapper):
     @torch.no_grad()
     def _swap_by_bbox_crop(
         self,
-        dst_img: np.ndarray,
-        src_img: Union[np.ndarray, torch.Tensor, None] = None,
-        dst_face: Optional[Face] = None,
-        src_face: Optional[Face] = None,
-        src_face_idx: Optional[int] = None,
-        dst_face_idx: Optional[int] = None,
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> FaceSwapData:
-        dst_face_processed = self.face_aligner.get_face_processed(
-            dst_img, face_idx=dst_face_idx
+        swap_data.dst_face_processed = self.face_aligner.get_face_processed(
+            img=swap_data.dst_img, face_idx=swap_data.dst_face_idx
         )
-        if dst_face_processed.face is None:
-            return FaceSwapData(
-                dst_img=dst_img,
-                dst_face_idx=dst_face_idx,
-                dst_face_processed=None,
-                swapped_dst_img=dst_img,
-                swapping_occurred=False,
-            )
-        cropped_img = self.face_aligner.get_crop_by_bbox_squared(
-            face_processed=dst_face_processed, crop_size=self.image_size
+        if swap_data.dst_face_processed.face is None:
+            swap_data.swapping_occurred = False
+            swap_data.dst_face_processed = None
+            return swap_data
+
+        swap_data.aligned_dst_img = self.face_aligner.get_crop_by_bbox_squared(
+            face_processed=swap_data.dst_face_processed, crop_size=self.image_size
         )
         (
             predicted_dst_img,
             predicted_dst_mask,
         ) = self.face_swapper_model(
-            image_to_tensor(bgr2rgb(cropped_img)).to(self.device)
+            image_to_tensor(bgr2rgb(swap_data.aligned_dst_img)).to(self.device)
         )
-        predicted_dst_img = rgb2bgr(tensor_to_image(predicted_dst_img))
-        predicted_dst_mask = (
+        swap_data.predicted_dst_img = rgb2bgr(tensor_to_image(predicted_dst_img))
+        swap_data.predicted_dst_mask = (
             predicted_dst_mask.cpu()
             .numpy()
             .transpose(0, 2, 3, 1)
             .squeeze(0)
             .clip(0, 1.0)
         )
-        face_data = FaceSwapData(
-            dst_img=dst_img,
-            dst_face=dst_face_processed.face,
-            dst_face_idx=dst_face_idx,
-            aligned_dst_img=cropped_img,
-            dst_face_processed=dst_face_processed,
-            predicted_dst_img=predicted_dst_img,
-            predicted_dst_mask=predicted_dst_mask,
-            swapped_dst_img=predicted_dst_img,
-            swapping_occurred=True,
-        )
-        if paste_back:
-            face_data.swapped_dst_img = self.face_aligner.paste_back_by_bbox_squared(
-                face_data
+        swap_data.swapping_occurred = True
+        if self.paste_back:
+            swap_data.swapped_dst_img = self.face_aligner.paste_back_by_bbox_squared(
+                face_swap_data=swap_data
             )
-        return face_data
+        return swap_data
 
     @torch.no_grad()
     def _swap_by_infa(
         self,
-        dst_img: np.ndarray,
-        src_img: Union[np.ndarray, torch.Tensor, None] = None,
-        dst_face: Optional[Face] = None,
-        src_face: Optional[Face] = None,
-        src_face_idx: Optional[int] = None,
-        dst_face_idx: Optional[int] = None,
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> FaceSwapData:
-        if dst_face is None:
-            dst_face = self.face_aligner.get_face(dst_img, face_idx=dst_face_idx)
-        if dst_face is None:
-            return FaceSwapData(
-                dst_img=dst_img,
-                dst_face_idx=dst_face_idx,
-                swapped_dst_img=dst_img,
-                swapping_occurred=False,
+        if swap_data.dst_face is None:
+            swap_data.dst_face = self.face_aligner.get_face(
+                img=swap_data.dst_img, face_idx=swap_data.dst_face_idx
             )
-        aligned_dst_img, transform_matrix = self.face_aligner.get_one_aligned_img(
-            img=dst_img, face=dst_face
+        if swap_data.dst_face is None:
+            swap_data.swapping_occurred = False
+            return swap_data
+        (
+            swap_data.aligned_dst_img,
+            swap_data.transform_matrix,
+        ) = self.face_aligner.get_one_aligned_img(
+            img=swap_data.dst_img,
+            face=swap_data.dst_face,
+            face_idx=swap_data.dst_face_idx,
         )
-        face_data = FaceSwapData(
-            dst_img=dst_img,
-            dst_face=dst_face,
-            dst_face_idx=dst_face_idx,
-            aligned_dst_img=aligned_dst_img,
-            transform_matrix=transform_matrix,
-        )
+
         if self.crop_paste_method == CropPasteMethod.INFA_INSWAPPER:
-            return self.__swap_by_infa_inswapper(
-                face_data=face_data, paste_back=paste_back, *args, **kwargs
-            )
+            return self.__swap_by_infa_inswapper(swap_data=swap_data, *args, **kwargs)
         elif self.crop_paste_method == CropPasteMethod.INFA_GENERATOR:
-            return self.__swap_by_predicted_mask(
-                face_data=face_data, paste_back=paste_back, *args, **kwargs
-            )
+            return self.__swap_by_predicted_mask(swap_data=swap_data, *args, **kwargs)
         else:
             raise ValueError(
                 f"Given crop method {self.crop_paste_method} is not implemented for _swap_by_infa()"
@@ -326,8 +266,7 @@ class FaceGeneratorSwapper(FaceSwapper):
     @torch.no_grad()
     def __swap_by_infa_inswapper(
         self,
-        face_data: "FaceSwapData",
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> "FaceSwapData":
@@ -336,7 +275,7 @@ class FaceGeneratorSwapper(FaceSwapper):
                 predicted_dst_img,
                 predicted_dst_mask,
             ) = self.face_swapper_model(
-                image_to_tensor(bgr2rgb(face_data.aligned_dst_img)).to(self.device)
+                image_to_tensor(bgr2rgb(swap_data.aligned_dst_img)).to(self.device)
             )
             predicted_dst_img = rgb2bgr(tensor_to_image(predicted_dst_img))
             predicted_dst_mask = (
@@ -350,27 +289,28 @@ class FaceGeneratorSwapper(FaceSwapper):
                 np.float32
             ) * predicted_dst_mask + (
                 1 - predicted_dst_mask
-            ) * face_data.aligned_dst_img.astype(
+            ) * swap_data.aligned_dst_img.astype(
                 np.float32
             )
             swapped_dst_img = swapped_dst_img.clip(0, 255).round().astype(np.uint8)
         else:
             swapped_dst_img = self.face_swapper_model(
-                image_to_tensor(bgr2rgb(face_data.aligned_dst_img)).to(self.device)
+                image_to_tensor(bgr2rgb(swap_data.aligned_dst_img)).to(self.device)
             )
             swapped_dst_img = rgb2bgr(tensor_to_image(swapped_dst_img))
 
-        face_data.swapped_dst_img = swapped_dst_img
-        face_data.swapping_occurred = True
-        if paste_back:
-            face_data.swapped_dst_img = self.face_aligner.paste_back_infa(face_data)
-        return face_data
+        swap_data.swapped_dst_img = swapped_dst_img
+        swap_data.swapping_occurred = True
+        if self.paste_back:
+            swap_data.swapped_dst_img = self.face_aligner.paste_back_infa(
+                face_swap_data=swap_data
+            )
+        return swap_data
 
     @torch.no_grad()
     def __swap_by_predicted_mask(
         self,
-        face_data: "FaceSwapData",
-        paste_back: bool = True,
+        swap_data: "FaceSwapData",
         *args,
         **kwargs,
     ) -> "FaceSwapData":
@@ -381,7 +321,7 @@ class FaceGeneratorSwapper(FaceSwapper):
             predicted_dst_img,
             predicted_dst_mask,
         ) = self.face_swapper_model(
-            image_to_tensor(bgr2rgb(face_data.aligned_dst_img)).to(self.device)
+            image_to_tensor(bgr2rgb(swap_data.aligned_dst_img)).to(self.device)
         )
         predicted_dst_img = rgb2bgr(tensor_to_image(predicted_dst_img))
         predicted_dst_mask = (
@@ -391,23 +331,23 @@ class FaceGeneratorSwapper(FaceSwapper):
             .squeeze(0)
             .clip(0, 1.0)
         )
-        face_data.swapping_occurred = True
-        face_data.predicted_dst_img = predicted_dst_img
-        face_data.predicted_dst_mask = predicted_dst_mask
-        if paste_back:
-            face_data.swapped_dst_img = self.face_aligner.paste_back_aligned(face_data)
+        swap_data.swapping_occurred = True
+        swap_data.predicted_dst_img = predicted_dst_img
+        swap_data.predicted_dst_mask = predicted_dst_mask
+        if self.paste_back:
+            swap_data.swapped_dst_img = self.face_aligner.paste_back_aligned(swap_data)
         else:
             swapped_dst_img = predicted_dst_img.astype(
                 np.float32
             ) * predicted_dst_mask + (
                 1 - predicted_dst_mask
-            ) * face_data.aligned_dst_img.astype(
+            ) * swap_data.aligned_dst_img.astype(
                 np.float32
             )
-            face_data.swapped_dst_img = (
+            swap_data.swapped_dst_img = (
                 swapped_dst_img.clip(0, 255).round().astype(np.uint8)
             )
-        return face_data
+        return swap_data
 
 
 def load_face_swapper_infa(

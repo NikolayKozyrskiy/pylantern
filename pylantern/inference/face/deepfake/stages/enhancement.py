@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import torch
 from basicsr.utils import img2tensor, tensor2img
-from basicsr.utils.download_util import load_file_from_url
 from torch.nn import Module
 from torch.nn import functional as F
 from torchvision.transforms.functional import normalize
@@ -23,8 +22,6 @@ from pylantern.common.utils.img import bgr2rgb, rgb2bgr
 
 if TYPE_CHECKING:
     from facexlib.utils.face_restoration_helper import FaceRestoreHelper
-
-    from pylantern.inference.face.deepfake.df_config import DeepFakeInferenceConfig
 
 
 def denoise_nlmeans(

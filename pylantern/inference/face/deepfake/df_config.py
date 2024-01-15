@@ -18,6 +18,7 @@ from facexlib.utils.face_restoration_helper import FaceRestoreHelper
 from insightface.app import FaceAnalysis
 
 from pylantern.common.constants import DEFAULT_IMG_MEAN, DEFAULT_IMG_STD
+from pylantern.common.io.video.data import InputVideoData, OutputVideoData
 from pylantern.inference.config import BaseInferenceConfig
 from pylantern.inference.face.deepfake.data import CropPasteMethod
 from pylantern.inference.face.deepfake.models.models import (
@@ -58,14 +59,24 @@ class DFImageConfig(NamedTuple):
     enhanced_imgs_dir: Optional["Path"] = None
 
 
+# class DFVideoConfig(NamedTuple):
+#     dst_video_path: Optional["Path"] = None  # Path("videos__orig/video__orig.mp4")
+#     dst_video_aligned_path: Optional["Path"] = None
+#     swapped_video_path: Optional["Path"] = None
+#     enhanced_video_path: Optional["Path"] = None
+#     dst_videos_dir: Optional["Path"] = None  # Path("videos__orig")
+#     swapped_videos_dir: Optional["Path"] = None
+#     enhanced_videos_dir: Optional["Path"] = None
+#     concat_video_names: Optional[List[str]] = None
+#     concat_type: str = "h"
+
+
 class DFVideoConfig(NamedTuple):
-    dst_video_path: Optional["Path"] = None  # Path("videos__orig/video__orig.mp4")
-    dst_video_aligned_path: Optional["Path"] = None
-    swapped_video_path: Optional["Path"] = None
-    enhanced_video_path: Optional["Path"] = None
-    dst_videos_dir: Optional["Path"] = None  # Path("videos__orig")
-    swapped_videos_dir: Optional["Path"] = None
-    enhanced_videos_dir: Optional["Path"] = None
+    src_img_path: "Path"
+    src_face_idx: Optional[int] = None
+    input_video_data: Optional["InputVideoData"] = None
+    swapped_video_data: Optional["OutputVideoData"] = None
+    enhanced_video_data: Optional["OutputVideoData"] = None
     concat_video_names: Optional[List[str]] = None
     concat_type: str = "h"
 
@@ -79,6 +90,7 @@ class DeepFakeInferenceConfig(BaseInferenceConfig):
     upscale_coeff: int = 1
 
     paste_back: bool = True
+    denoise_enhanced: bool = True
     predict_mask: bool = True
     crop_paste_method: CropPasteMethod = CropPasteMethod.INFA_INSWAPPER
 

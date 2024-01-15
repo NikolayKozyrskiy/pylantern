@@ -24,5 +24,5 @@ class BaseInferencePipeline(ComputationGraph):
         self.data = None
 
     @contextmanager
-    def data_scope(self, data: Union[Mapping, Iterable, DataClass]):
+    def data_item_scope(self, data: Union[Mapping, Iterable, DataClass]):
         raise NotImplementedError()

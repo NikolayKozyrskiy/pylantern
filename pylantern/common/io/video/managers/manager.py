@@ -5,6 +5,7 @@ import ffmpeg
 import numpy as np
 
 from pylantern.common.constants import FFMPEG_BIN
+from pylantern.common.utils import mkdir
 
 if TYPE_CHECKING:
     from subprocess import Popen
@@ -16,21 +17,22 @@ class VideoIOManager:
     def __init__(
         self,
         input_video: "InputVideoData",
-        output_videos: Sequence["OutputVideoData"],
+        output_videos: Sequence[Optional["OutputVideoData"]],
     ) -> None:
         self.input_video = input_video
         self.read_stream: Optional["Popen"] = None
-        self.output_videos: Dict[str, "OutputVideoData"] = {
-            video.name: video for video in output_videos
-        }
-        for video_name in self.output_videos.keys():
-            self.output_videos[video_name].set_resolution(
-                width=self.input_video.meta.width, height=self.input_video.meta.height
-            )
-            self.output_videos[video_name].set_fps(fps=self.input_video.fps)
-        self.write_streams: Dict[str, Optional["Popen"]] = {
-            video.name: None for video in output_videos
-        }
+        self.output_videos: Dict[str, "OutputVideoData"] = {}
+        self.write_streams: Dict[str, Optional["Popen"]] = {}
+        for video in output_videos:
+            if video is not None:
+                self.output_videos[video.name] = video
+                self.output_videos[video.name].set_resolution(
+                    width=self.input_video.meta.width,
+                    height=self.input_video.meta.height,
+                )
+                self.output_videos[video.name].set_fps(fps=self.input_video.fps)
+                self.write_streams[video.name] = None
+                mkdir(self.output_videos[video.name].path.parent)
 
     @contextmanager
     def write_scope(self, video_name: Optional[str] = None) -> None:
@@ -76,7 +78,8 @@ class VideoIOManager:
             self._close_input_video_read_stream()
 
     def write_frame(self, frame: "np.ndarray", video_name: str) -> None:
-        self.write_streams[video_name].stdin.write(frame.astype(np.uint8).tobytes())
+        if self.write_streams[video_name] is not None:
+            self.write_streams[video_name].stdin.write(frame.astype(np.uint8).tobytes())
         return None
 
     def read_frame(self) -> Optional["np.ndarray"]:
