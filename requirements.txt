@@ -6,11 +6,12 @@ addict
 h5py
 tqdm
 future
-pydantic==1.9.0
+pydantic==2.5.3
 wandb>=0.13.5
 ffmpeg-python
 notebook
 matplotlib
+onnxruntime-gpu
 albumentations==1.1.0
 insightface>=0.7.3
 basicsr>=1.4.2

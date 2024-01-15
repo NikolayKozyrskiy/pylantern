@@ -10,7 +10,7 @@ from torch import Tensor
 from torch.nn import Module
 from torchvision.transforms.functional import normalize
 
-from pylantern.common.constants import DEFAULT_MEAN, DEFAULT_STD
+from pylantern.common.constants import DEFAULT_IMG_MEAN, DEFAULT_IMG_STD
 
 
 class FaceSegmenter:
@@ -110,7 +110,7 @@ class FaceSegmenterParsenet(FaceSegmenter):
         face_input = img2tensor(
             face_input.astype("float32") / 255.0, bgr2rgb=True, float32=True
         )
-        normalize(face_input, DEFAULT_MEAN, DEFAULT_STD, inplace=True)
+        normalize(face_input, DEFAULT_IMG_MEAN, DEFAULT_IMG_STD, inplace=True)
         face_input = torch.unsqueeze(face_input, 0).to(self.device)
         return face_input
 

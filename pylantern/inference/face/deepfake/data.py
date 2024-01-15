@@ -15,6 +15,12 @@ class CropPasteMethod(str, Enum):
     DEFAULT = "infa_inswapper"
 
 
+class VideoIOTypes(str, Enum):
+    INPUT = "Input"
+    SWAPPED = "Swapped"
+    SWAPPED_ENHANCED = "Swapped_enhanced"
+
+
 @dataclass
 class FaceInfaProcessed:
     img: np.ndarray

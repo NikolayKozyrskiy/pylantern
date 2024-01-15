@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Dict, Generator, Optional, Sequence
 
 import ffmpeg
 import numpy as np
+import tqdm.auto as tqdm
 
 from pylantern.common.constants import FFMPEG_BIN
 from pylantern.common.utils import mkdir
@@ -68,7 +69,9 @@ class VideoIOManager:
                 if frames_num is not None
                 else self.input_video.meta.frames_num
             )
-            for frame_idx in range(frames_num):
+            for frame_idx in tqdm.tqdm(
+                range(frames_num), desc=f"{self.input_video.name.value} Frames"
+            ):
                 frame = self.read_frame()
                 if frame is not None:
                     yield frame

@@ -74,14 +74,17 @@ class DFImageConfig(NamedTuple):
 class DFVideoConfig(NamedTuple):
     src_img_path: "Path"
     src_face_idx: Optional[int] = None
-    input_video_data: Optional["InputVideoData"] = None
-    swapped_video_data: Optional["OutputVideoData"] = None
-    enhanced_video_data: Optional["OutputVideoData"] = None
+    input_video_data: Optional[InputVideoData] = None
+    swapped_video_data: Optional[OutputVideoData] = None
+    enhanced_video_data: Optional[OutputVideoData] = None
     concat_video_names: Optional[List[str]] = None
     concat_type: str = "h"
 
 
 class DeepFakeInferenceConfig(BaseInferenceConfig):
+    class Config:
+        arbitrary_types_allowed = True
+
     image_config: Optional["DFImageConfig"] = None
     video_config: Optional["DFVideoConfig"] = None
 
@@ -105,7 +108,7 @@ class DeepFakeInferenceConfig(BaseInferenceConfig):
         root_path: default = checkpoints
         """
         face_analyser = FaceAnalysis(
-            name="buffalo_l", root=self.root_path.parent / "infa_checkpoints"
+            name="buffalo_l", root=Path("_d") / "infa_checkpoints"
         )
         face_analyser.prepare(ctx_id=0, det_size=(320, 320))
         return face_analyser

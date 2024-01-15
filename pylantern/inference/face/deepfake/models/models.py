@@ -25,11 +25,11 @@ def load_inswapper128_onnx(
     model_path: Optional["Path"] = None,
 ) -> "INSwapper":
     model_path = (
-        str((Path("_d") / "infa_checkpoints" / "inswapper_128.onnx"))
+        Path("_d") / "infa_checkpoints" / "inswapper_128.onnx"
         if model_path is None
         else model_path
     )
-    return infa.model_zoo.get_model(name=model_path, download=False)
+    return infa.model_zoo.get_model(name=str(model_path), download=False)
 
 
 def load_generator_inference_model(

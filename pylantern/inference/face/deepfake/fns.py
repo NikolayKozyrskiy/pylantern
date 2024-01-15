@@ -5,7 +5,7 @@ from matches.utils import seed_everything, setup_cudnn_reproducibility
 from pylantern.common.io.video.managers import VideoIOManager
 from pylantern.common.utils import get_device
 from pylantern.config import load_config
-from pylantern.inference.face.deepfake.data import FaceSwapData
+from pylantern.inference.face.deepfake.data import FaceSwapData, VideoIOTypes
 from pylantern.inference.face.deepfake.df_config import DeepFakeInferenceConfig
 from pylantern.inference.face.deepfake.df_output_dispatcher import (
     DeepFakeInferenceOutputDispatcher,
@@ -43,13 +43,13 @@ def infer_video(config_path: "Path", frames_num: Optional[int] = None) -> None:
         with io_manager.write_scope():
             for dst_img in io_manager.read_frames(frames_num=frames_num):
                 swap_data = FaceSwapData(dst_img=dst_img)
-                with pipeline.data_item_scope(data=swap_data):
+                with pipeline.data_item_scope(data=swap_data), pipeline.cache_scope():
                     out_dispatcher.compute_stages(pipeline=pipeline)
                     io_manager.write_frame(
-                        frame=swap_data.swapped_dst_img, video_name="swapped"
+                        frame=swap_data.swapped_dst_img, video_name=VideoIOTypes.SWAPPED
                     )
                     io_manager.write_frame(
                         frame=swap_data.enhanced_swapped_dst_img,
-                        video_name="swapped_enhanced",
+                        video_name=VideoIOTypes.SWAPPED_ENHANCED,
                     )
     return None

@@ -10,16 +10,20 @@ class DeepFakeInferenceOutputDispatcher(BaseInferenceOutputDispatcher):
     def __init__(self, stage_names: List[str]) -> None:
         super().__init__(stage_names=stage_names)
 
-    def swap(pipeline: "DeepFakeInferencePipeline", *args, **kwargs) -> None:
+    def swap(self, pipeline: "DeepFakeInferencePipeline", *args, **kwargs) -> None:
         pipeline.swap_face()
 
     def enhance_swapped_dst_img(
-        pipeline: "DeepFakeInferencePipeline", *args, **kwargs
+        self, pipeline: "DeepFakeInferencePipeline", *args, **kwargs
     ) -> None:
         pipeline.enhance_swapped_dst_img()
 
-    def enhance_dst_img(pipeline: "DeepFakeInferencePipeline", *args, **kwargs) -> None:
+    def enhance_dst_img(
+        self, pipeline: "DeepFakeInferencePipeline", *args, **kwargs
+    ) -> None:
         pipeline.enhance_dst_img()
 
-    def enhance_src_img(pipeline: "DeepFakeInferencePipeline", *args, **kwargs) -> None:
+    def enhance_src_img(
+        self, pipeline: "DeepFakeInferencePipeline", *args, **kwargs
+    ) -> None:
         pipeline.enhance_src_img()

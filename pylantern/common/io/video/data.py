@@ -17,7 +17,7 @@ class VideoMeta:
     height: int
     duration: float
     frames_num: int
-    audio: Optional["Stream"] = None
+    audio: Optional[Stream] = None
 
     def __post_init__(self) -> None:
         self.fps: float = FPS_LIST[
@@ -32,7 +32,7 @@ class InputVideoData:
     scale: Union[float, Tuple[float, float]] = 1.0
     pix_fmt: str = "bgr24"
     bpp: int = 24
-    meta: Optional["VideoMeta"] = None
+    meta: Optional[VideoMeta] = None
 
     def __post_init__(self) -> None:
         self.scale = (
@@ -74,7 +74,7 @@ class OutputVideoData:
         self.fps = fps
 
 
-def get_video_meta(video_path: "Path") -> Optional["VideoMeta"]:
+def get_video_meta(video_path: "Path") -> Optional[VideoMeta]:
     try:
         probe = ffmpeg.probe(video_path)
         video_streams = [

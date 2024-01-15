@@ -15,5 +15,5 @@ class BaseInferenceOutputDispatcher:
         **kwargs,
     ) -> None:
         for stage_name in self.stage_names:
-            getattr(self, stage_name)(pipeline, *args, **kwargs)
+            getattr(self, stage_name)(pipeline=pipeline, *args, **kwargs)
         return None
