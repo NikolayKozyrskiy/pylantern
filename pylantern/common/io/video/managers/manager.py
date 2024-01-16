@@ -9,6 +9,7 @@ from pylantern.common.constants import FFMPEG_BIN
 from pylantern.common.utils import mkdir
 
 if TYPE_CHECKING:
+    from enum import Enum
     from subprocess import Popen
 
     from pylantern.common.io.video.data import InputVideoData, OutputVideoData
@@ -22,8 +23,8 @@ class VideoIOManager:
     ) -> None:
         self.input_video = input_video
         self.read_stream: Optional["Popen"] = None
-        self.output_videos: Dict[str, "OutputVideoData"] = {}
-        self.write_streams: Dict[str, Optional["Popen"]] = {}
+        self.output_videos: Dict["Enum", "OutputVideoData"] = {}
+        self.write_streams: Dict["Enum", Optional["Popen"]] = {}
         for video in output_videos:
             if video is not None:
                 self.output_videos[video.name] = video
@@ -36,7 +37,7 @@ class VideoIOManager:
                 mkdir(self.output_videos[video.name].path.parent)
 
     @contextmanager
-    def write_scope(self, video_name: Optional[str] = None) -> None:
+    def write_ctx(self, video_name: Optional[str] = None) -> None:
         try:
             if video_name is None:
                 for _video_name in self.write_streams.keys():
@@ -52,7 +53,7 @@ class VideoIOManager:
                 self._close_output_video_write_stream(video_name=video_name)
 
     @contextmanager
-    def read_scope(self) -> None:
+    def read_ctx(self) -> None:
         try:
             self._open_input_video_read_stream()
             yield
@@ -81,7 +82,7 @@ class VideoIOManager:
             self._close_input_video_read_stream()
 
     def write_frame(self, frame: "np.ndarray", video_name: str) -> None:
-        if self.write_streams[video_name] is not None:
+        if self.write_streams.get(video_name, None) is not None:
             self.write_streams[video_name].stdin.write(frame.astype(np.uint8).tobytes())
         return None
 

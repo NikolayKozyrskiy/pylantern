@@ -3,7 +3,7 @@ from pathlib import Path
 import typer
 
 from pylantern.common.train_fns import DevMode
-from pylantern.inference.face.deepfake.fns import infer_video
+from pylantern.inference.face.deepfake.fns import infer_image, infer_video
 
 app = typer.Typer()
 
@@ -11,7 +11,7 @@ app = typer.Typer()
 @app.command()
 def run_infer_video(
     config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
-    frames_num: int = typer.Option(None, "--frames-num", "-f"),
+    frames_num: int = typer.Option(None, "--frames-num", "-n"),
     dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
 ):
     if dev_mode == DevMode.SHORT:
@@ -20,13 +20,14 @@ def run_infer_video(
 
 
 @app.command()
-def run_infer_img_folder(
+def run_infer_image(
     config_path: Path = typer.Option(Path("./"), "-c", "--config-path"),
-    imgs_num: int = typer.Option(None, "--frames-num", "-f"),
+    images_num: int = typer.Option(None, "--images-num", "-n"),
     dev_mode: DevMode = typer.Option(DevMode.DISABLED, "--dev-mode", "-m"),
 ):
     if dev_mode == DevMode.SHORT:
-        imgs_num = 3
+        images_num = 3
+    infer_image(config_path=config_path, images_num=images_num)
 
 
 if __name__ == "__main__":

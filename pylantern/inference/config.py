@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 
 class BaseInferenceConfig(BaseModel):
     root_path: Path = Path("_d")
-    stage_names: List[str] = []
+    stage_names: List[Enum] = []
 
     transforms: list[Callable] = []
     workers_num: int = 4

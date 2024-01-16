@@ -18,6 +18,7 @@ from facexlib.utils.face_restoration_helper import FaceRestoreHelper
 from insightface.app import FaceAnalysis
 
 from pylantern.common.constants import DEFAULT_IMG_MEAN, DEFAULT_IMG_STD
+from pylantern.common.io.image.data import IOImageData
 from pylantern.common.io.video.data import InputVideoData, OutputVideoData
 from pylantern.inference.config import BaseInferenceConfig
 from pylantern.inference.face.deepfake.data import CropPasteMethod
@@ -52,23 +53,14 @@ if TYPE_CHECKING:
 
 
 class DFImageConfig(NamedTuple):
-    dst_img_path: Optional["Path"] = None  # Path("imgs__orig/img.png")
-    dst_imgs_dir: Optional["Path"] = None  # Path("imgs__orig")
-    dst_imgs_aligned_dir: Optional["Path"] = None
-    swapped_imgs_dir: Optional["Path"] = None
-    enhanced_imgs_dir: Optional["Path"] = None
-
-
-# class DFVideoConfig(NamedTuple):
-#     dst_video_path: Optional["Path"] = None  # Path("videos__orig/video__orig.mp4")
-#     dst_video_aligned_path: Optional["Path"] = None
-#     swapped_video_path: Optional["Path"] = None
-#     enhanced_video_path: Optional["Path"] = None
-#     dst_videos_dir: Optional["Path"] = None  # Path("videos__orig")
-#     swapped_videos_dir: Optional["Path"] = None
-#     enhanced_videos_dir: Optional["Path"] = None
-#     concat_video_names: Optional[List[str]] = None
-#     concat_type: str = "h"
+    src_img_path: Optional["Path"] = None
+    src_face_idx: Optional[int] = None
+    dst_img_data: Optional[IOImageData] = None
+    swapped_img_data: Optional[IOImageData] = None
+    swapped_enhanced_img_data: Optional[IOImageData] = None
+    enhanced_dst_img_data: Optional[IOImageData] = None
+    concat_image_names: Optional[List[str]] = None
+    concat_type: str = "a"
 
 
 class DFVideoConfig(NamedTuple):
@@ -76,9 +68,10 @@ class DFVideoConfig(NamedTuple):
     src_face_idx: Optional[int] = None
     input_video_data: Optional[InputVideoData] = None
     swapped_video_data: Optional[OutputVideoData] = None
+    swapped_enhanced_video_data: Optional[OutputVideoData] = None
     enhanced_video_data: Optional[OutputVideoData] = None
     concat_video_names: Optional[List[str]] = None
-    concat_type: str = "h"
+    concat_type: str = "a"
 
 
 class DeepFakeInferenceConfig(BaseInferenceConfig):

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Optional, Sequence, Tuple, Union
 
@@ -27,7 +28,7 @@ class VideoMeta:
 
 @dataclass
 class InputVideoData:
-    name: str
+    name: Enum
     path: "Path"
     scale: Union[float, Tuple[float, float]] = 1.0
     pix_fmt: str = "bgr24"
@@ -50,7 +51,7 @@ class InputVideoData:
 
 @dataclass
 class OutputVideoData:
-    name: str
+    name: Enum
     path: "Path"
     scale: Union[float, Tuple[float, float]] = 1.0
     pix_fmt: str = "yuv420p"

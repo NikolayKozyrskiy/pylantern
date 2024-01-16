@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
@@ -5,7 +6,7 @@ if TYPE_CHECKING:
 
 
 class BaseInferenceOutputDispatcher:
-    def __init__(self, stage_names: List[str]) -> None:
+    def __init__(self, stage_names: List[Enum]) -> None:
         self.stage_names = stage_names
 
     def compute_stages(
@@ -15,5 +16,5 @@ class BaseInferenceOutputDispatcher:
         **kwargs,
     ) -> None:
         for stage_name in self.stage_names:
-            getattr(self, stage_name)(pipeline=pipeline, *args, **kwargs)
+            getattr(self, stage_name.value)(pipeline=pipeline, *args, **kwargs)
         return None

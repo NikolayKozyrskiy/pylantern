@@ -15,10 +15,11 @@ class CropPasteMethod(str, Enum):
     DEFAULT = "infa_inswapper"
 
 
-class VideoIOTypes(str, Enum):
+class IOTypes(str, Enum):
     INPUT = "Input"
     SWAPPED = "Swapped"
-    SWAPPED_ENHANCED = "Swapped_enhanced"
+    SWAPPED_ENHANCED = "Swapped_Enhanced"
+    ENHANCED = "Enhanced"
 
 
 @dataclass
@@ -87,3 +88,4 @@ class FaceSwapData:
     swapped_dst_img: Optional[np.ndarray] = None
     swapping_occurred: bool = False
     enhanced_swapped_dst_img: Optional[np.ndarray] = None
+    enhanced_dst_img: Optional[np.ndarray] = None

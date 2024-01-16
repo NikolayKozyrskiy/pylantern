@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, Optional, Union
 
 import torch
 
-from pylantern.common.io.video.data import InputVideoData, OutputVideoData
+from pylantern.common.io.image.data import IOImageData
 from pylantern.inference.face.deepfake.data import CropPasteMethod, IOTypes
 from pylantern.inference.face.deepfake.df_config import (
     DeepFakeInferenceConfig,
-    DFVideoConfig,
+    DFImageConfig,
 )
 from pylantern.inference.face.deepfake.df_output_dispatcher import DeepFakeStageNames
 from pylantern.inference.face.deepfake.models.models import load_inswapper128_onnx
@@ -58,33 +58,33 @@ class Cfg(DeepFakeInferenceConfig):
         )
 
 
-video_config = DFVideoConfig(
+image_config = DFImageConfig(
     src_img_path=Path("_d/<src_path>"),
     src_face_idx=None,
-    input_video_data=InputVideoData(
+    dst_img_data=IOImageData(
         name=IOTypes.INPUT,
-        path=Path("_d/<input_path>"),
+        path=Path("_d/<dst_path>"),
     ),
-    swapped_video_data=OutputVideoData(
+    swapped_img_data=IOImageData(
         name=IOTypes.SWAPPED,
         path=Path("_d/<swapped_path>"),
     ),
-    swapped_enhanced_video_data=OutputVideoData(
+    swapped_enhanced_img_data=IOImageData(
         name=IOTypes.SWAPPED_ENHANCED,
         path=Path("_d/<swapped_enhanced>"),
     ),
-    # enhanced_video_data=OutputVideoData(
+    # enhanced_dst_img_data=IOImageData(
     #     name=IOTypes.ENHANCED,
-    #     path=Path("_d/<enhanced>"),
+    #     path=Path("_d/<enhanced_path>"),
     # ),
-    concat_video_names=["o", "e"],
+    concat_image_names=["o", "e"],
     concat_type="a",
 )
 
 config = Cfg(
     root_path=Path("_d"),
     stage_names=[DeepFakeStageNames.SWAP, DeepFakeStageNames.ENHANCE_SWAPPED_DST],
-    video_config=video_config,
+    image_config=image_config,
     predict_mask=False,
     crop_paste_method=CropPasteMethod.INFA_INSWAPPER,
     input_face_size=(512, 512),

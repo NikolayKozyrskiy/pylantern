@@ -103,7 +103,7 @@ class DeepFakeInferencePipeline(BaseInferencePipeline):
 
     @graph_node
     def enhance_dst_img(self) -> None:
-        self.data.dst_img = self.face_enhancer.enhance(
+        self.data.enhanced_dst_img = self.face_enhancer.enhance(
             img=self.data.dst_img,
             is_aligned=False,
             only_keep_largest=True,

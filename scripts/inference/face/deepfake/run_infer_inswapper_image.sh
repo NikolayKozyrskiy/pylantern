@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python3 -m pylantern.inference.face.deepfake run-infer-image -c configs/inference/face/deepfake/inswapper_image_cfg.py
